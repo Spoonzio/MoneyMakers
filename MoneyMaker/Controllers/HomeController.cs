@@ -9,66 +9,49 @@ namespace MoneyMaker.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private const string BASE_URL = "https://api.exchangerate.host/latest";
+        private const string BASE_URL = "https://api.exchangerate.host";
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
         }
 
-        // public IActionResult Index()
-        // {
-        //     return View();
-        // }
-
-        // [HttpPost]
-        // public async Task<IActionResult> Index(int fromValue, String fromUnit, String toUnit)
-        // {
-        //     var message = new HttpRequestMessage();
-        //     message.Method = HttpMethod.Get;
-
-        //     string url = BASE_URL + "?base=" + fromUnit + "&symbols=" + toUnit;
-        //     message.RequestUri = new Uri(url);
-        //     message.Headers.Add("Accept", "application/json");
-
-        //     var client = _clientFactory.CreateClient();
-
-        //     var response = await client.SendAsync(message);
-
-        //     if (response.IsSuccessStatusCode)
-        //     {
-        //         using var responseStream = await response.Content.ReadAsStreamAsync();
-                
-        //         Console.WriteLine("ok");
-        //         //Students = await JsonSerializer.DeserializeAsync<IEnumerable<Student>>(responseStream);
-        //     }
-        //     else
-        //     {
-        //         //GetStudentsError = true;
-        //         //Students = Array.Empty<Student>();
-        //     }
-
-        //     return View();
-        // }
-
-        [HttpGet]
-    public async Task<ActionResult> Index()
-    {
-        using (var client = new HttpClient())
+        public IActionResult Index()
         {
-            string url = BASE_URL + "?base=USD&symbols=CAD";
-            client.BaseAddress = new Uri(url);
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            HttpResponseMessage response = await client.GetAsync(url);
-            if (response.IsSuccessStatusCode)
-            {
-                string jsondata = await response.Content.ReadAsStringAsync();
-                return Content(jsondata, "application/json");
-            }
             return View();
         }
-    }
+
+        [HttpPost]
+        public async Task<ActionResult> Index(int fromValue, String fromUnit, String toUnit)
+        {
+            using (var client = new HttpClient())
+            {
+                // Build URL for API call
+                string url = BASE_URL + "/latest?base=" + fromUnit + "&symbols=" + toUnit;
+                client.BaseAddress = new Uri(url);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    // Response OK
+                    string jsondata = await response.Content.ReadAsStringAsync();
+
+                    // TODO: get Rate from JSON
+
+                    // TODO: calculate to_value = Rate * from_value 
+
+                    // TODO: pass calculated value to page with ViewData["ToValue"]
+                    //          See index.cshtml for ViewData usage
+
+
+                    return View();
+                }else{
+                    // Response ERROR
+                    return View();
+                }
+            }
+        }
 
         public IActionResult Privacy()
         {
