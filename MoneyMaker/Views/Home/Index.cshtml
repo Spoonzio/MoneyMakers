@@ -3,6 +3,33 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+    {
+        <table>
+            <tr>
+                <td>
+                    <select name="fromUnit" id="fromUnit">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="CAD">CAD</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="fromValue" id="fromValue" value='@ViewData["FromValue"]'>
+                </td>
+                <td>
+                    <input type="submit" name="convert" value="Convert >>">
+                <td>
+                    <input readonly type="number" name="toValue" id="toValue" value='@ViewData["ToValue"]'>
+                </td>
+                <td>
+                    <select name="toUnit" id="toUnit">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="CAD">CAD</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+    }
 </div>
