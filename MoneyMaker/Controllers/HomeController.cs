@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MoneyMaker.Models;
+using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -36,17 +37,24 @@ namespace MoneyMaker.Controllers
                 {
                     // Response OK
                     string jsondata = await response.Content.ReadAsStringAsync();
+                    JsonReader reader = new JsonTextReader(new StringReader(jsondata));
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == JsonToken.Float || reader.TokenType == JsonToken.Integer)
+                        {
 
-                    // TODO: get Rate from JSON
-
-                    // TODO: calculate to_value = Rate * from_value 
-
-                    // TODO: pass calculated value to page with ViewData["ToValue"]
-                    //          See index.cshtml for ViewData usage
-
+                            string jsonText = reader.Value.ToString();
+                            var number = float.Parse(jsonText);
+                            @ViewData["fromValue"] = fromValue;
+                            @ViewData["ToValue"] = number * fromValue;
+                            Console.WriteLine("{0}", number * fromValue);
+                        }
+                    }
 
                     return View();
-                }else{
+                }
+                else
+                {
                     // Response ERROR
                     return View();
                 }
