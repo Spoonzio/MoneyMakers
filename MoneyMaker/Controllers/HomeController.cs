@@ -43,11 +43,10 @@ namespace MoneyMaker.Controllers
                         if (reader.TokenType == JsonToken.Float || reader.TokenType == JsonToken.Integer)
                         {
 
-                            string jsonText = reader.Value.ToString();
-                            var number = float.Parse(jsonText);
+                            string jsonText = reader.Value!.ToString()!;
+                            var number = float.Parse(jsonText!);
                             @ViewData["fromValue"] = fromValue;
                             @ViewData["ToValue"] = number * fromValue;
-                            Console.WriteLine("{0}", number * fromValue);
                         }
                     }
 
