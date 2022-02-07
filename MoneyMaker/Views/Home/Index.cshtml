@@ -3,33 +3,73 @@
 }
 
 <div class="text-center">
-    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
-    {
-        <table>
+    <div id="convertBlock" style="height:200px; background:#b2babb ;">
+        @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+        {
+            <table style="width:100%">
+                <tr style=" margin-top: auto;  margin-bottom: auto;">
+                    <td>
+                        <select name="fromUnit" id="fromUnit">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="CAD">CAD</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" name="fromValue" id="fromValue" value='@ViewData["FromValue"]'>
+                    </td>
+                    <td>
+                        <input type="submit" name="convert" value="Convert >>">
+                    <td>
+                        <input readonly type="number" name="toValue" id="toValue" value='@ViewData["ToValue"]'>
+                    </td>
+                    <td>
+                        <select name="toUnit" id="toUnit">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="CAD">CAD</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        }
+    </div>
+
+    <div id="featureBlock">
+
+        <table style="width:100%">
             <tr>
                 <td>
-                    <select name="fromUnit" id="fromUnit">
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="CAD">CAD</option>
-                    </select>
+                    <div class="card" style="width: 18rem;">
+                        <img class="card-img-top" src="https://via.placeholder.com/286x180" alt="Card image cap">
+                        <div class="card-body">
+                        <h5 class="card-title">Alerts</h5>
+                        <p class="card-text">Create alert to be updated with the currency exchange rage</p>
+                    </div>
                 </td>
+
                 <td>
-                    <input type="number" name="fromValue" id="fromValue" value='@ViewData["FromValue"]'>
+                    <div class="card" style="width: 18rem;">
+                        <img class="card-img-top" src="https://via.placeholder.com/286x180" alt="Card image cap">
+                        <div class="card-body">
+                        <h5 class="card-title">Portfolio</h5>
+                        <p class="card-text">Store portfolio and see a sum of your money in local currencies</p>
+                    </div>
                 </td>
+
                 <td>
-                    <input type="submit" name="convert" value="Convert >>">
-                <td>
-                    <input readonly type="number" name="toValue" id="toValue" value='@ViewData["ToValue"]'>
+                    <div class="card" style="width: 18rem;">
+                        <img class="card-img-top" src="https://via.placeholder.com/286x180" alt="Card image cap">
+                        <div class="card-body">
+                        <h5 class="card-title">Charts</h5>
+                        <p class="card-text">See a trend of the forex in the past</p>
+                    </div>
                 </td>
-                <td>
-                    <select name="toUnit" id="toUnit">
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="CAD">CAD</option>
-                    </select>
-                </td>
+
             </tr>
         </table>
-    }
+   
+    </div>
+
+
 </div>
