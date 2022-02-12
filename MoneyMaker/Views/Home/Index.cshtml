@@ -4,7 +4,42 @@
 @{
     ViewData["Title"] = "Home Page";
 }
+<head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', { 'packages': ['corechart'] });
+        google.charts.setOnLoadCallback(drawChart);
 
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable([
+                ['Date', 'Rate'],
+                ['2004-01-01', 1.154],
+                ['2005-01-01', 1.243],
+                ['2006-01-01', 1.213],
+                ['2007-01-01', 5.151],
+                ['2008-01-01', 2.121],
+                ['2009-01-01', 1.151],
+                ['2010-01-01', 2.151],
+                ['2011-01-01', 1.151],
+                ['2012-01-01', 3.154],
+                ['2013-01-01', 1.243],
+                ['2014-01-01', 4.213],
+                ['2015-01-01', 2.151],
+                ['2016-01-01', 2.151],
+                ['2016-01-01', 1.151],
+            ]);
+
+            var options = {
+                title: 'USD to CAD Currency',
+                legend: { position: 'bottom', "width": 800, "height": 800 }
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+            chart.draw(data, options);
+        }
+    </script>
+</head>
 <div class="text-center">
     <div id="convertBlock">
         <form method="post">
@@ -64,7 +99,10 @@
         </p>
     </div>
 
+    
     <div id="chartBlock">
+        <h1>Sample Chart (Need real data to make real chart)</h1>
+        <div id="curve_chart" style="margin-left: 15%; width: 1000px; height: 500px"></div>
         @* TODO: Chart goes here, make visible when theres conversion, else invisible *@
     </div>
 
