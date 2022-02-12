@@ -8,18 +8,18 @@ namespace MoneyMaker.Models
     {
         [Key]
         [ForeignKey("UserId")]
-        public virtual ApplicationUser User { get; set; }
+        public virtual ApplicationUser? User { get; set; }
 
         [Key]
         [ForeignKey("CurrencySym")]
-        public string FromCurrency { get; set; }
+        public string? FromCurrency { get; set; }
 
         [Key]
         [ForeignKey("CurrencySym")]
-        public string ToCurrency { get; set; }
+        public string? ToCurrency { get; set; }
 
         [Required]
-        public string AlertName { get; set; }
+        public string? AlertName { get; set; }
 
         [Required]
         [DataType(DataType.DateTime)]

@@ -6,10 +6,10 @@ namespace MoneyMaker.Models
     {
         [Key]
         [Required]
-        public string CurrencySym { get; set; }
+        public string? CurrencySym { get; set; }
 
         [Required]
-        public string CurrencyFullName { get; set; }
+        public string? CurrencyFullName { get; set; }
 
     }
 }

@@ -7,11 +7,11 @@ namespace MoneyMaker.Models
     {
         [Key]
         [ForeignKey("UserId")]
-        public virtual ApplicationUser User { get; set; }
+        public virtual ApplicationUser? User { get; set; }
 
         [Required]
         [ForeignKey("CurrencySym")]
-        public string EntryCurrencySym { get; set; }
+        public string? EntryCurrencySym { get; set; }
 
         [Required]
         public int Value { get; set; }
