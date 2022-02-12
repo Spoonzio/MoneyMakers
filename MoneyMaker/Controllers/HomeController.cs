@@ -1,62 +1,52 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿#nullable disable
+using Microsoft.AspNetCore.Mvc;
 using MoneyMaker.Models;
-using Newtonsoft.Json;
+using MoneyMaker.Data;
 using System.Diagnostics;
-using System.Net.Http;
-using System.Net.Http.Headers;
+
+using MoneyMaker.Services;
+using MoneyMaker.ViewModels;
 
 namespace MoneyMaker.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private const string BASE_URL = "https://api.exchangerate.host";
-        public HomeController(ILogger<HomeController> logger)
+        private ApiService apiService;
+        private CurrencyService currencyService;
+        public HomeController(
+            ILogger<HomeController> logger,
+            ApplicationDbContext context
+            )
         {
             _logger = logger;
+            apiService = new ApiService();
+            currencyService = new CurrencyService(context);
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var currList = await currencyService.GetCurrencies();
+            ViewBag.currencies = currList;
+            return View(new ConvertViewModel());
         }
 
         [HttpPost]
-        public async Task<ActionResult> Index(int fromValue, String fromUnit, String toUnit)
-        {
-            using (var client = new HttpClient())
-            {
-                // Build URL for API call
-                string url = BASE_URL + "/latest?base=" + fromUnit + "&symbols=" + toUnit;
-                client.BaseAddress = new Uri(url);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        public async Task<ActionResult> Index(ConvertViewModel model)
+        {   
+            // Get rate from service
+            // External API -> Api Service -> THIS
+            float rate = await apiService.GetRate(model.FromCurrency, model.ToCurrency);
 
-                HttpResponseMessage response = await client.GetAsync(url);
-                if (response.IsSuccessStatusCode)
-                {
-                    // Response OK
-                    string jsondata = await response.Content.ReadAsStringAsync();
-                    JsonReader reader = new JsonTextReader(new StringReader(jsondata));
-                    while (reader.Read())
-                    {
-                        if (reader.TokenType == JsonToken.Float || reader.TokenType == JsonToken.Integer)
-                        {
-
-                            string jsonText = reader.Value!.ToString()!;
-                            var number = float.Parse(jsonText!);
-                            @ViewData["fromValue"] = fromValue;
-                            @ViewData["ToValue"] = number * fromValue;
-                        }
-                    }
-
-                    return View();
-                }
-                else
-                {
-                    // Response ERROR
-                    return View();
-                }
+            if (rate>0){
+                // Response SUCCESS
+                model.ToValue = rate * model.FromValue;
+                var currList = await currencyService.GetCurrencies();
+                ViewBag.currencies = currList;
+                return View(model);
+            }else{
+                // Response ERROR
+                return View();
             }
         }
 
