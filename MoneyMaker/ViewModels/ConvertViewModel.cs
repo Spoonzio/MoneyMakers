@@ -18,5 +18,7 @@ namespace MoneyMaker.ViewModels
         [Required]
         [Display(Name = "To Currency")]
         public string? ToCurrency { get; set; }
+
+        public Dictionary<string, float>? ChartData { get; set; }
     }
 }

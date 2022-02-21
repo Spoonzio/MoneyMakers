@@ -16,11 +16,12 @@ namespace MoneyMaker.Controllers
         private CurrencyService currencyService;
         public HomeController(
             ILogger<HomeController> logger,
-            ApplicationDbContext context
+            ApplicationDbContext context,
+            IHttpClientFactory httpClientFactory
             )
         {
             _logger = logger;
-            apiService = new ApiService();
+            apiService = new ApiService(httpClientFactory);
             currencyService = new CurrencyService(context);
         }
 
@@ -43,6 +44,9 @@ namespace MoneyMaker.Controllers
                 model.ToValue = rate * model.FromValue;
                 var currList = await currencyService.GetCurrencies();
                 ViewBag.currencies = currList;
+
+                var chartData = await apiService.GetMonthRate(model.FromCurrency, model.ToCurrency);
+
                 return View(model);
             }else{
                 // Response ERROR

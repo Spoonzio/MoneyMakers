@@ -1,26 +1,31 @@
 using System.Net.Http.Headers;
+using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MoneyMaker.Services;
 public class ApiService
 {
-    public HttpClient client;
-    private const string BASE_URL = "https://api.exchangerate.host";
 
-    public ApiService(){
-        client = new HttpClient();
+    private readonly IHttpClientFactory _httpClientFactory;
+    private const string BASE_URL = "https://api.exchangerate.host";
+    private const int DAYS_IN_A_MONTH = 30;
+    public ApiService(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<float> GetRate(String fromUnit, String toUnit)
     {
         // Build URL for API call
         string url = BASE_URL + "/latest?base=" + fromUnit + "&symbols=" + toUnit;
-        client.BaseAddress = new Uri(url);
-        client.DefaultRequestHeaders.Accept.Clear();
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        var client = _httpClientFactory.CreateClient();
+
+        var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, url){};
 
         // Get response
-        HttpResponseMessage response = await client.GetAsync(url);
+        HttpResponseMessage response = await client.SendAsync(httpRequestMessage);
+
         if (response.IsSuccessStatusCode)
         {
             // Response OK
@@ -47,8 +52,40 @@ public class ApiService
         } 
     }
     
-    // public async Task<float[]> GetMonthRate(String fromUnit){
-    //     // TODO https://api.exchangerate.host/timeseries?start_date=2020-01-01&end_date=2020-01-04&from=USD
-    // }
+    public async Task<Dictionary<string, float>> GetMonthRate(string fromUnit, string toUnit){
+        // TODO https://api.exchangerate.host/timeseries?start_date=2020-01-01&end_date=2020-01-04&from=USD
+
+        // Build URL for API call
+        DateTime today = DateTime.Today;
+        DateTime oneMonthAgo = today.AddMonths(-1);
+        
+        string url = BASE_URL + "/timeseries?start_date=" + oneMonthAgo.ToShortDateString() + "&end_date=" + today.ToShortDateString() + "&from=" + fromUnit;
+        var client = _httpClientFactory.CreateClient();
+        var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, url) { };
+
+
+        // Get response
+        Dictionary<string, float> monthValue = new Dictionary<string, float>();
+        HttpResponseMessage response = await client.SendAsync(httpRequestMessage);
+
+        if (response.IsSuccessStatusCode){
+            // Response OK
+            string jsonstr = await response.Content.ReadAsStringAsync();
+            JObject json = JObject.Parse(jsonstr);
+            if (json.ContainsKey("rates"))
+            {
+                string rateStr = json["rates"].ToString();
+                JObject rateJson = JObject.Parse(rateStr);
+                foreach (var dayRate in rateJson)
+                {
+                    JObject dayRateJson = JObject.Parse(dayRate.Value.ToString());
+                    string dayCurrencyRate = dayRateJson[toUnit.ToString()].ToString();
+                    if(dayCurrencyRate!=null) monthValue.Add(dayRate.Key, float.Parse(dayCurrencyRate));
+                }
+            }
+        }
+
+        return monthValue;
+    }
 
 }
