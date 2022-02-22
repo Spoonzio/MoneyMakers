@@ -23,7 +23,7 @@ public class CurrencyService
 
     public async Task<ActionResult<Currency>> GetCurrency(string sym)
     {
-        var Currency = await _context.Currencies.FindAsync(sym);
+        Currency Currency = await _context.Currencies.FindAsync(sym);
         return Currency;
     }
 

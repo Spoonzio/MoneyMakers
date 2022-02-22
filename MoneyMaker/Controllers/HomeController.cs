@@ -46,7 +46,7 @@ namespace MoneyMaker.Controllers
                 ViewBag.currencies = currList;
 
                 var chartData = await apiService.GetMonthRate(model.FromCurrency, model.ToCurrency);
-
+                model.ChartData = chartData;
                 return View(model);
             }else{
                 // Response ERROR

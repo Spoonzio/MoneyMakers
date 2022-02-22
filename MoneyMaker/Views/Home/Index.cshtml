@@ -28,7 +28,6 @@
                 ['2016-01-01', 2.151],
                 ['2016-01-01', 1.151],
             ]);
-
             var options = {
                 title: 'USD to CAD Currency',
                 legend: { position: 'bottom', "width": 800, "height": 800 }
@@ -85,25 +84,35 @@
          <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 
-    <div id="featuresBlock">
-        <p>
-            Store portfolio and see a sum of your money in local currencies
-        </p>
+    @{
+        if (Model.ChartData!=null)
+        {
+            <div id="chartBlock">
+                <h1>Sample Chart (Need real data to make real chart)</h1>
+                <div id="curve_chart" style="margin-left: 15%; width: 1000px; height: 500px"></div>
+                @* TODO: Chart goes here, make visible when theres conversion, else invisible *@
+            </div>
+        }
+        else
+        {
+            <div id="featuresBlock">
+                <p>
+                    Store portfolio and see a sum of your money in local currencies
+                </p>
 
-        <p>
-            Create alert to be updated with the currency exchange rate
-        </p>
+                <p>
+                    Create alert to be updated with the currency exchange rate
+                </p>
 
-        <p>
-            See a trend of the forex in the past        
-        </p>
-    </div>
+                <p>
+                    See a trend of the forex in the past        
+                </p>
+            </div>
+        }
+    }
+
 
     
-    <div id="chartBlock">
-        <h1>Sample Chart (Need real data to make real chart)</h1>
-        <div id="curve_chart" style="margin-left: 15%; width: 1000px; height: 500px"></div>
-        @* TODO: Chart goes here, make visible when theres conversion, else invisible *@
-    </div>
+
 
 </div>
