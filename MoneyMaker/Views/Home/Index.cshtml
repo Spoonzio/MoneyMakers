@@ -4,12 +4,13 @@
 @{
     ViewData["Title"] = "Home Page";
 }
+
 <head>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
         google.charts.load('current', { 'packages': ['corechart'] });
         google.charts.setOnLoadCallback(drawChart);
-        
+
         function drawChart() {
             var modelAsJson = JSON.parse('@Html.Raw(Json.Serialize(Model))');
             console.log(modelAsJson);
@@ -51,10 +52,11 @@
                 <tr>
                     <td>
                         <div class="form-group">
-                            <select name="FromCurrency" asp-for ="FromCurrency" asp-items="@(new SelectList(ViewBag.currencies, "CurrencySym", "CurrencyFullName"))"></select>
+                            <select name="FromCurrency" asp-for="FromCurrency"
+                                asp-items="@(new SelectList(ViewBag.currencies, "CurrencySym", "CurrencyFullName"))"></select>
                         </div>
 
-                        
+
                     </td>
                     <td>
                         <div class="form-group">
@@ -63,38 +65,65 @@
                         </div>
                     </td>
                 </tr>
-                
+
                 <tr>
                     <td>
-                        <button type="submit" class="btn btn-primary">Convert</button>                    
+                        <button type="submit" class="btn btn-primary">Convert</button>
                     </td>
                 </tr>
 
                 <tr>
                     <td>
                         <input asp-for="ToValue" type="number" name="ToValue" id="ToValue" value=@Model.ToValue>
-                    </td>   
+                    </td>
 
                     <td>
-                        <div class="form-group">                
-                            <select name="ToCurrency" asp-for ="ToCurrency" asp-items="@(new SelectList(ViewBag.currencies, "CurrencySym", "CurrencyFullName"))"></select>
+                        <div class="form-group">
+                            <select name="ToCurrency" asp-for="ToCurrency"
+                                asp-items="@(new SelectList(ViewBag.currencies, "CurrencySym", "CurrencyFullName"))"></select>
                         </div>
                     </td>
                 </tr>
             </table>
-        
+
         </form>
 
-         <div asp-validation-summary="All" class="text-danger"></div>
+        <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 
     @{
-        if (Model.ChartData!=null)
+        if (Model.ChartData != null)
         {
             <div id="alertBlock">
                 <form method="post">
                     <p>ALERT BLOCK</p>
                     @* AlertModel inputs*@
+                    <table>
+                        <tr>
+                            <td>
+                                <div class="form-group">
+                                    <select id="Alert" name="Alert">
+                                        <option selected="selected" value="Below">Below</option>
+                                        
+                                        <option value="Above">Above</option>
+                                    </select>
+                                </div>
+
+
+                            </td>
+                            <td>
+                                <div class="form-group">
+                                    <span asp-validation-for="AlertValue" class="text-danger"></span>
+                                    <input asp-for="AlertValue" type="number" name="AlertValue" id="AlertValue">
+                                </div>
+
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </td>
+                        </tr>
+
+                    </table>
                 </form>
             </div>
 
@@ -116,14 +145,14 @@
                 </p>
 
                 <p>
-                    See a trend of the forex in the past        
+                    See a trend of the forex in the past
                 </p>
             </div>
         }
     }
 
 
-    
+
 
 
 </div>
