@@ -3,12 +3,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MoneyMaker.Models
 {
-    
+
     public class Alert
     {
         [Key]
         [ForeignKey("UserId")]
-        public virtual ApplicationUser? User { get; set; }
+        public string? UserId { get; set; }
 
         [Key]
         [ForeignKey("CurrencySym")]
@@ -23,7 +23,14 @@ namespace MoneyMaker.Models
 
         [Required]
         [DataType(DataType.DateTime)]
-        public DateTime Date { get; set; }
+        public DateTime CreateDate { get; set; }
+
+        [Required]
+        public bool isBelow { get; set; }
+
+        [Required]
+        [DataType(DataType.Currency)]
+        public float ConditionValue { get; set; }
 
 
     }
