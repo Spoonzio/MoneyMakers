@@ -9,8 +9,11 @@
     <script type="text/javascript">
         google.charts.load('current', { 'packages': ['corechart'] });
         google.charts.setOnLoadCallback(drawChart);
-
+        
         function drawChart() {
+            var modelAsJson = JSON.parse('@Html.Raw(Json.Serialize(Model))');
+            console.log(modelAsJson);
+
             var data = google.visualization.arrayToDataTable([
                 ['Date', 'Rate'],
                 ['2004-01-01', 1.154],
@@ -36,6 +39,7 @@
             var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
 
             chart.draw(data, options);
+
         }
     </script>
 </head>
@@ -89,7 +93,7 @@
         {
             <div id="alertBlock">
                 <form method="post">
-                    <p>Create an alert for conversion between</p>
+                    <p>ALERT BLOCK</p>
                     @* AlertModel inputs*@
                 </form>
             </div>
