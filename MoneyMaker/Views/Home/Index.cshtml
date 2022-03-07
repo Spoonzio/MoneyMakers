@@ -13,27 +13,18 @@
 
         function drawChart() {
             var modelAsJson = JSON.parse('@Html.Raw(Json.Serialize(Model))');
-            console.log(modelAsJson);
+            array = modelAsJson["chartData"];
+            array = Object.entries(array)
+            array.unshift(["Date", "Rate"]);
 
-            var data = google.visualization.arrayToDataTable([
-                ['Date', 'Rate'],
-                ['2004-01-01', 1.154],
-                ['2005-01-01', 1.243],
-                ['2006-01-01', 1.213],
-                ['2007-01-01', 5.151],
-                ['2008-01-01', 2.121],
-                ['2009-01-01', 1.151],
-                ['2010-01-01', 2.151],
-                ['2011-01-01', 1.151],
-                ['2012-01-01', 3.154],
-                ['2013-01-01', 1.243],
-                ['2014-01-01', 4.213],
-                ['2015-01-01', 2.151],
-                ['2016-01-01', 2.151],
-                ['2016-01-01', 1.151],
-            ]);
+            
+            var fromCurr = modelAsJson.fromCurrency;
+            var toCurr = modelAsJson.toCurrency;
+            var convTitle = fromCurr + " to " + toCurr + " Conversion";
+
+            var data = google.visualization.arrayToDataTable(array);
             var options = {
-                title: 'USD to CAD Currency',
+                title: convTitle,
                 legend: { position: 'bottom', "width": 800, "height": 800 }
             };
 
@@ -94,38 +85,9 @@
     @{
         if (Model.ChartData != null)
         {
-            <div id="alertBlock">
-                <form method="post">
-                    <p>ALERT BLOCK</p>
-                    @* AlertModel inputs*@
-                    <table>
-                        <tr>
-                            <td>
-                                <div class="form-group">
-                                    <select id="Alert" name="Alert">
-                                        <option selected="selected" value="Below">Below</option>
-                                        
-                                        <option value="Above">Above</option>
-                                    </select>
-                                </div>
-
-
-                            </td>
-                            <td>
-                                <div class="form-group">
-                                    <span asp-validation-for="AlertValue" class="text-danger"></span>
-                                    <input asp-for="AlertValue" type="number" name="AlertValue" id="AlertValue">
-                                </div>
-
-                            </td>
-                            <td>
-                                <button type="submit" class="btn btn-primary">Save</button>
-                            </td>
-                        </tr>
-
-                    </table>
-                </form>
-            </div>
+            <a asp-action="AddAlert" 
+                asp-route-fromCurr="@Model.FromCurrency"
+                asp-route-toCurr="@Model.ToCurrency">Add an alert</a>
 
             <div id="chartBlock">
                 <h1>Sample Chart (Need real data to make real chart)</h1>

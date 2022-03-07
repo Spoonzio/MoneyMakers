@@ -35,6 +35,8 @@ namespace MoneyMaker.Controllers
         [HttpPost]
         public async Task<ActionResult> Index(ConvertViewModel model)
         {   
+            if(model.FromValue <= 0) model.FromValue = 1;
+
             // Get rate from service
             // External API -> Api Service -> THIS
             float rate = await apiService.GetRate(model.FromCurrency, model.ToCurrency);
@@ -52,6 +54,12 @@ namespace MoneyMaker.Controllers
                 // Response ERROR
                 return View();
             }
+        }
+
+        public IActionResult AddAlert()
+        {
+
+            return View();
         }
 
         public IActionResult Privacy()

@@ -9,9 +9,6 @@ namespace MoneyMaker.ViewModels
         [Display(Name = "From Currency")]
         public string? FromCurrency { get; set; }
 
-        [Required]
-        [Display(Name = "Alert Currency")]
-        public string? AlertCurrency { get; set; }
     
         [Required]
         [DataType(DataType.Currency)]
@@ -19,8 +16,6 @@ namespace MoneyMaker.ViewModels
 
         [DataType(DataType.Currency)]
         public float ToValue { get; set; }
-        [DataType(DataType.Currency)]
-        public float AlertValue { get; set; }
 
         [Required]
         [Display(Name = "To Currency")]

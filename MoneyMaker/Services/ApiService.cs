@@ -58,8 +58,13 @@ public class ApiService
         // Build URL for API call
         DateTime today = DateTime.Today;
         DateTime oneMonthAgo = today.AddMonths(-1);
-        
-        string url = BASE_URL + "/timeseries?start_date=" + oneMonthAgo.ToShortDateString() + "&end_date=" + today.ToShortDateString() + "&from=" + fromUnit;
+
+        // Normalise date
+        string startDate = DateNormalizer(oneMonthAgo);
+        string endDate = DateNormalizer(today);
+
+
+        string url = BASE_URL + "/timeseries?start_date=" + startDate + "&end_date=" + endDate + "&base=" + fromUnit;
         var client = _httpClientFactory.CreateClient();
         var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, url) { };
 
@@ -88,4 +93,18 @@ public class ApiService
         return monthValue;
     }
 
+
+    private string DateNormalizer(DateTime date)
+    {
+        // Normalise date
+        string year, month, day;
+        year = date.Year.ToString();
+        month = date.Month.ToString();
+        month = month.Length == 1 ? "0" + month : month;
+
+        day = date.Day.ToString();
+        day = day.Length == 1 ? "0" + day : day;
+
+        return year + "-" + month + "-" + day;
+    }
 }
