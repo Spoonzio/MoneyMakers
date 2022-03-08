@@ -6,6 +6,7 @@ using System.Diagnostics;
 
 using MoneyMaker.Services;
 using MoneyMaker.ViewModels;
+using Microsoft.AspNetCore.Identity;
 
 namespace MoneyMaker.Controllers
 {
@@ -14,15 +15,19 @@ namespace MoneyMaker.Controllers
         private readonly ILogger<HomeController> _logger;
         private ApiService apiService;
         private CurrencyService currencyService;
+        private readonly UserManager<IdentityUser> _userManager;
+
         public HomeController(
             ILogger<HomeController> logger,
             ApplicationDbContext context,
-            IHttpClientFactory httpClientFactory
+            IHttpClientFactory httpClientFactory,
+            UserManager<IdentityUser> userManager
             )
         {
             _logger = logger;
             apiService = new ApiService(httpClientFactory);
             currencyService = new CurrencyService(context);
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
@@ -56,10 +61,21 @@ namespace MoneyMaker.Controllers
             }
         }
 
-        public IActionResult AddAlert()
+        public IActionResult AddAlert(string toCurr, string fromCurr, float currVal)
         {
 
-            return View();
+            var alert = new Alert();
+            alert.FromCurrency = fromCurr;
+            alert.ToCurrency = toCurr;
+            alert.ConditionValue = currVal;
+            alert.isBelow = false;
+            alert.CreateDate = DateTime.Today;
+            
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var id = _userManager.GetUserId(User); // Get user id:
+            alert.UserId = id;
+
+            return View("~/Views/Alert/Create.cshtml", alert);
         }
 
         public IActionResult Privacy()

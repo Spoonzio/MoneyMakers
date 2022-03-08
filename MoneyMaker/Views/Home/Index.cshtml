@@ -87,7 +87,8 @@
         {
             <a asp-action="AddAlert" 
                 asp-route-fromCurr="@Model.FromCurrency"
-                asp-route-toCurr="@Model.ToCurrency">Add an alert</a>
+                asp-route-toCurr="@Model.ToCurrency"
+                asp-route-currVal="@Model.ToValue">Add an alert</a>
 
             <div id="chartBlock">
                 <h1>Sample Chart (Need real data to make real chart)</h1>
