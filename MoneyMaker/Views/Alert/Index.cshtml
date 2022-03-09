@@ -13,17 +13,21 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.AlertName)
+                Name
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CreateDate)
+                Created On
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.isBelow)
+               From
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ConditionValue)
+                To
             </th>
+            <th>
+                Above/Below
+            </th>
+
             <th></th>
         </tr>
     </thead>
@@ -34,14 +38,33 @@
                 @Html.DisplayFor(modelItem => item.AlertName)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CreateDate)
+                @{
+                    string dateStr = item.CreateDate.ToShortDateString();
+                    <p>@dateStr</p>
+                }
+
+                
             </td>
+
             <td>
-                @Html.DisplayFor(modelItem => item.isBelow)
+                @Html.DisplayFor(modelItem => item.FromCurrency)
             </td>
+
             <td>
+                @Html.DisplayFor(modelItem => item.ToCurrency)
+            </td>
+
+            <td>
+                @{
+                    if(item.isBelow){
+                        <p>Below </p>
+                    }else{
+                        <p>Above </p>
+                    }
+                }
                 @Html.DisplayFor(modelItem => item.ConditionValue)
             </td>
+
             <td>
                 @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
                 @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |

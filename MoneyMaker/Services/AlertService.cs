@@ -20,6 +20,24 @@ public class AlertService
         return await _context.Alerts.ToListAsync();
     }
 
+    public async Task<IEnumerable<Alert>> GetUserAlerts(string UserId)
+    {
+        var allAlerts = await _context.Alerts.ToListAsync();
+        List<Alert> userAlerts = new List<Alert>();
+
+        foreach (var alert in allAlerts)
+        {
+            if (alert!=null 
+                && alert.UserId != null 
+                && alert.UserId.Equals(UserId))
+            {
+                userAlerts.Add(alert);
+            }
+        }
+
+        return userAlerts;
+    }
+
 
     public async Task<ActionResult<Alert>> GetAlert(string UserId, string FromCurrency, string ToCurrency)
     {
@@ -72,8 +90,8 @@ public class AlertService
         }
     }
 
-    private bool AlertExists(string UserId, string FromCurrency, string ToCurrency)
+    public async Task<bool> AlertExists(string UserId, string FromCurrency, string ToCurrency)
     {
-        return _context.Alerts.Any(e => (e.UserId == UserId && e.FromCurrency == FromCurrency && e.ToCurrency == ToCurrency));
+        return  _context.Alerts.Any(e => (e.UserId == UserId && e.FromCurrency == FromCurrency && e.ToCurrency == ToCurrency));
     }
 }

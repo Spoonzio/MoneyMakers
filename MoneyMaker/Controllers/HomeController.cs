@@ -61,7 +61,7 @@ namespace MoneyMaker.Controllers
             }
         }
 
-        public IActionResult AddAlert(string toCurr, string fromCurr, float currVal)
+        public async Task<IActionResult> AddAlert(string toCurr, string fromCurr, float currVal)
         {
 
             var alert = new Alert();
@@ -74,6 +74,9 @@ namespace MoneyMaker.Controllers
             System.Security.Claims.ClaimsPrincipal currentUser = this.User;
             var id = _userManager.GetUserId(User); // Get user id:
             alert.UserId = id;
+
+            var currList = await currencyService.GetCurrencies();
+            ViewBag.currencies = currList;
 
             return View("~/Views/Alert/Create.cshtml", alert);
         }

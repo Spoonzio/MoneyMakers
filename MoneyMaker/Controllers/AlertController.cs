@@ -16,7 +16,9 @@ public class AlertController : Controller
 {
     private readonly ILogger<AlertController> _logger;
     private AlertService alertService;
+    private CurrencyService currencyService;
     private ApiService apiService;
+
     private readonly UserManager<IdentityUser> _userManager;
 
     public AlertController(
@@ -28,13 +30,17 @@ public class AlertController : Controller
     {
         _logger = logger;
         alertService = new AlertService(context);
+        currencyService = new CurrencyService(context);
         apiService = new ApiService(httpClientFactory);
         _userManager = userManager;
     }
 
     public async Task<IActionResult> Index()
     {
-        var userAlerts = await alertService.GetAlerts();
+        System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+        var id = _userManager.GetUserId(User); // Get user id:
+        
+        var userAlerts = await alertService.GetUserAlerts(id);
         return View(userAlerts);
     }
 
@@ -52,14 +58,33 @@ public class AlertController : Controller
         var id = _userManager.GetUserId(User); // Get user id:
         alert.UserId = id;
 
+        var currList = await currencyService.GetCurrencies();
+        ViewBag.currencies = currList;
+
         return View(alert);
     }
 
     [HttpPost]
-    public async Task<IActionResult> onPostCreate(CreateAlertViewModel model)
+    public async Task<IActionResult> onPostCreate(Alert model)
     {
-        // TODO
-        return View();
+        if(model != null)
+        {
+            bool ex = await alertService.AlertExists(model.UserId, model.FromCurrency, model.ToCurrency);
+
+            if (ex)
+            {
+                ViewBag.errorMessage = "Alert for this conversion already exists, try editing";
+                return View("Create", model);
+            }
+        }
+
+        await alertService.PostAlert(model);
+
+        System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+        var id = _userManager.GetUserId(User); // Get user id:
+
+        var userAlerts = await alertService.GetUserAlerts(id);
+        return View("Index", userAlerts);
     }
 
 }

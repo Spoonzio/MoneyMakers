@@ -30,6 +30,7 @@ namespace MoneyMaker.Models
 
         [Required]
         [DataType(DataType.Currency)]
+        [Range(0.0, Double.MaxValue, ErrorMessage = "The field {0} must be greater than {1}.")]
         public float ConditionValue { get; set; }
 
 

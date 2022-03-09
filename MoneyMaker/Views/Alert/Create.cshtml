@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Create an Alert";
+
+    List<SelectListItem> aboveBelowList = new List<SelectListItem>();
+    aboveBelowList.Add(new SelectListItem() { Text = "Below",   Value=true.ToString(), Selected = false });
+    aboveBelowList.Add(new SelectListItem() { Text = "Above",   Value=false.ToString(), Selected = false });
 }
 
 <h1>Create an Alert</h1>
@@ -12,38 +16,49 @@
     <div class="col-md-4">
         <form asp-action="onPostCreate">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <input asp-for="UserId" class="form-control" />
-                <span asp-validation-for="UserId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FromCurrency" class="control-label"></label>
-                <input asp-for="FromCurrency" class="form-control" />
-                <span asp-validation-for="FromCurrency" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ToCurrency" class="control-label"></label>
-                <input asp-for="ToCurrency" class="form-control" />
-                <span asp-validation-for="ToCurrency" class="text-danger"></span>
-            </div>
+            <div class="text-danger">@ViewBag.errorMessage</div>
             <div class="form-group">
                 <label asp-for="AlertName" class="control-label"></label>
                 <input asp-for="AlertName" class="form-control" />
                 <span asp-validation-for="AlertName" class="text-danger"></span>
             </div>
+
+            <div class="form-group" hidden>
+                <label asp-for="UserId" class="control-label"></label>
+                <input asp-for="UserId" class="form-control" />
+                <span asp-validation-for="UserId" class="text-danger"></span>
+            </div>
+
             <div class="form-group">
+                From: <select name="FromCurrency" asp-for="FromCurrency"
+                    asp-items="@(new SelectList(ViewBag.currencies, "CurrencySym", "CurrencyFullName"))"></select>
+            </div>
+
+            <div class="form-group">
+                To:<select name="ToCurrency" asp-for="ToCurrency"
+                    asp-items="@(new SelectList(ViewBag.currencies, "CurrencySym", "CurrencyFullName"))"></select>
+            </div>
+
+
+
+            <div class="form-group" hidden>
                 <label asp-for="CreateDate" class="control-label"></label>
-                <input asp-for="CreateDate" class="form-control" />
+                <input asp-for="CreateDate" type="date" class="form-control" />
                 <span asp-validation-for="CreateDate" class="text-danger"></span>
             </div>
-            <div class="form-group form-check">
+            @*<div class="form-group form-check">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="isBelow" /> @Html.DisplayNameFor(model => model.isBelow)
                 </label>
+            </div>*@
+
+            <div class="form-group form-check">
+                <select asp-for="isBelow"
+                    asp-items="@(aboveBelowList)"></select>
             </div>
+
             <div class="form-group">
-                <label asp-for="ConditionValue" class="control-label"></label>
+                <label asp-for="ConditionValue" class="control-label" hidden></label>
                 <input asp-for="ConditionValue" class="form-control" />
                 <span asp-validation-for="ConditionValue" class="text-danger"></span>
             </div>
