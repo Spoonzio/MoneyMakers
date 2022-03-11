@@ -1,5 +1,7 @@
 ﻿@using MoneyMaker.ViewModels;
+@using Microsoft.AspNetCore.Identity
 @model ConvertViewModel
+@inject SignInManager<IdentityUser> SignInManager
 
 @{
     ViewData["Title"] = "Home Page";
@@ -83,7 +85,7 @@
     </div>
 
     @{
-        if (Model.ChartData != null)
+        if (Model.ChartData != null && SignInManager.IsSignedIn(User))
         {
             <a asp-action="AddAlert" 
                 asp-route-fromCurr="@Model.FromCurrency"

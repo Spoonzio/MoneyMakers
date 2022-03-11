@@ -37,11 +37,7 @@ public class AlertController : Controller
 
     public async Task<IActionResult> Index()
     {
-        System.Security.Claims.ClaimsPrincipal currentUser = this.User;
-        var id = _userManager.GetUserId(User); // Get user id:
-        
-        var userAlerts = await alertService.GetUserAlerts(id);
-        return View(userAlerts);
+        return View(await getUserAlert());
     }
 
     public async Task<IActionResult> Create()
@@ -50,7 +46,7 @@ public class AlertController : Controller
         alert.FromCurrency = "USD";
         alert.ToCurrency = "CAD";
         var currValue = await apiService.GetRate("USD", "CAD");
-        alert.ConditionValue = currValue;
+        alert.ConditionValue = (float)Math.Round(currValue, 2);
         alert.isBelow = false;
         alert.CreateDate = DateTime.Today;
 
@@ -64,7 +60,7 @@ public class AlertController : Controller
         return View(alert);
     }
 
-    [HttpPost]
+
     public async Task<IActionResult> onPostCreate(Alert model)
     {
         if(model != null)
@@ -80,13 +76,47 @@ public class AlertController : Controller
 
         await alertService.PostAlert(model);
 
-        System.Security.Claims.ClaimsPrincipal currentUser = this.User;
-        var id = _userManager.GetUserId(User); // Get user id:
 
-        var userAlerts = await alertService.GetUserAlerts(id);
+        return View("Index", await getUserAlert());
+    }
+
+
+    public async Task<IActionResult> Delete(string UserId, string FromCurrency, string ToCurrency)
+    {
+        System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+        var id = _userManager.GetUserId(User);
+
+        if (UserId != null 
+            && id == UserId
+            && FromCurrency != null 
+            && ToCurrency != null)
+        {
+            var successawait = await alertService.DeleteAlert(UserId, FromCurrency, ToCurrency);
+        }
+
+        return View("Index", await getUserAlert());
+
+    }
+
+    public async Task<IActionResult> Edit(string UserId, string FromCurrency, string ToCurrency)
+    {
+        var alert = await alertService.GetAlert(UserId, FromCurrency, ToCurrency);
+        return View(alert);
+    }
+
+    public async Task<IActionResult> onPostEdit(Alert editAlert)
+    {
+        await alertService.PutAlert(editAlert);
+        var userAlerts = await getUserAlert();
         return View("Index", userAlerts);
     }
 
+    private async Task<IEnumerable<Alert>> getUserAlert()
+    {
+        System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+        var id = _userManager.GetUserId(User);
+        return await alertService.GetUserAlerts(id);
+    }
 }
 
 

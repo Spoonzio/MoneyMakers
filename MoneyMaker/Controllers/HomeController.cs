@@ -67,7 +67,7 @@ namespace MoneyMaker.Controllers
             var alert = new Alert();
             alert.FromCurrency = fromCurr;
             alert.ToCurrency = toCurr;
-            alert.ConditionValue = currVal;
+            alert.ConditionValue = (float)Math.Round(currVal, 2);
             alert.isBelow = false;
             alert.CreateDate = DateTime.Today;
             

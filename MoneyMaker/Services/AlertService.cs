@@ -39,7 +39,7 @@ public class AlertService
     }
 
 
-    public async Task<ActionResult<Alert>> GetAlert(string UserId, string FromCurrency, string ToCurrency)
+    public async Task<Alert> GetAlert(string UserId, string FromCurrency, string ToCurrency)
     {
         string[] param = { UserId, FromCurrency, ToCurrency };
         Alert Alert = await _context.Alerts.FindAsync(param);
@@ -79,7 +79,7 @@ public class AlertService
         return Alert;
     }
 
-    public async void DeleteAlert(string UserId, string FromCurrency, string ToCurrency)
+    public async Task<Boolean> DeleteAlert(string UserId, string FromCurrency, string ToCurrency)
     {
         string[] param = { UserId, FromCurrency, ToCurrency };
         Alert Alert = await _context.Alerts.FindAsync(param);
@@ -87,7 +87,10 @@ public class AlertService
         {
             _context.Alerts.Remove(Alert);
             await _context.SaveChangesAsync();
+            return true;
         }
+
+        return false;
     }
 
     public async Task<bool> AlertExists(string UserId, string FromCurrency, string ToCurrency)

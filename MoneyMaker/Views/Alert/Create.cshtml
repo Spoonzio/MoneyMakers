@@ -46,11 +46,6 @@
                 <input asp-for="CreateDate" type="date" class="form-control" />
                 <span asp-validation-for="CreateDate" class="text-danger"></span>
             </div>
-            @*<div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="isBelow" /> @Html.DisplayNameFor(model => model.isBelow)
-                </label>
-            </div>*@
 
             <div class="form-group form-check">
                 <select asp-for="isBelow"
@@ -59,7 +54,7 @@
 
             <div class="form-group">
                 <label asp-for="ConditionValue" class="control-label" hidden></label>
-                <input asp-for="ConditionValue" class="form-control" />
+                <input asp-for="ConditionValue" type="number" class="form-control" step="0.01"/>
                 <span asp-validation-for="ConditionValue" class="text-danger"></span>
             </div>
             <div class="form-group">

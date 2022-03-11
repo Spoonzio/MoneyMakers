@@ -66,9 +66,8 @@
             </td>
 
             <td>
-                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+                @Html.ActionLink("Edit", "Edit", new { UserId = item.UserId, FromCurrency = item.FromCurrency, ToCurrency = item.ToCurrency }) | 
+                @Html.ActionLink("Delete", "Delete", new { UserId = item.UserId, FromCurrency = item.FromCurrency, ToCurrency = item.ToCurrency })
             </td>
         </tr>
 }
