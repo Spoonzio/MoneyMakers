@@ -37,7 +37,7 @@ namespace MoneyMaker.Controllers
         {
             var currList = await currencyService.GetCurrencies();
             ViewBag.currencies = currList;
-            ViewBag.alerts = await getUserAlert();
+            ViewBag.alerts = await getUserActiveAlert();
             return View(new ConvertViewModel());
         }
 
@@ -55,7 +55,7 @@ namespace MoneyMaker.Controllers
                 model.ToValue = rate * model.FromValue;
                 var currList = await currencyService.GetCurrencies();
                 ViewBag.currencies = currList;
-                ViewBag.alerts = await getUserAlert();
+                ViewBag.alerts = await getUserActiveAlert();
 
                 var chartData = await apiService.GetMonthRate(model.FromCurrency, model.ToCurrency);
                 model.ChartData = chartData;
@@ -71,6 +71,28 @@ namespace MoneyMaker.Controllers
             System.Security.Claims.ClaimsPrincipal currentUser = this.User;
             var id = _userManager.GetUserId(User);
             return await alertService.GetUserAlerts(id);
+        }
+
+        private async Task<IEnumerable<Alert>> getUserActiveAlert()
+        {
+            var userAlerts = await getUserAlert();
+            List<Alert> userActiveAlerts = new List<Alert>();
+
+            foreach (var alert in userAlerts)
+            {
+                var currValue = await apiService.GetRate(alert.FromCurrency, alert.ToCurrency);
+
+                if (alert.isBelow && currValue < alert.ConditionValue)
+                {
+                    userActiveAlerts.Add(alert);
+                }
+                else if (!alert.isBelow && currValue > alert.ConditionValue)
+                {
+                    userActiveAlerts.Add(alert);
+                }
+            }
+
+            return userActiveAlerts;
         }
 
         public IActionResult Privacy()

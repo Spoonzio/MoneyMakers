@@ -85,6 +85,7 @@
     </div>
     @*My alerts*@
     <div id="alertBlock">
+        <p>Your active alerts:</p>
     @{
         if (ViewBag.alerts != null && ViewBag.alerts.Count>0)
         {
@@ -95,7 +96,7 @@
         }
         else
         {
-            <p>You currently do not have any alerts</p>
+            <p>There is no alerts active right now</p>
         }
     }
     </div>
