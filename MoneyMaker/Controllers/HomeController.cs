@@ -15,7 +15,9 @@ namespace MoneyMaker.Controllers
         private readonly ILogger<HomeController> _logger;
         private ApiService apiService;
         private CurrencyService currencyService;
+        private AlertService alertService;
         private readonly UserManager<IdentityUser> _userManager;
+
 
         public HomeController(
             ILogger<HomeController> logger,
@@ -27,6 +29,7 @@ namespace MoneyMaker.Controllers
             _logger = logger;
             apiService = new ApiService(httpClientFactory);
             currencyService = new CurrencyService(context);
+            alertService = new AlertService(context);
             _userManager = userManager;
         }
 
@@ -34,6 +37,7 @@ namespace MoneyMaker.Controllers
         {
             var currList = await currencyService.GetCurrencies();
             ViewBag.currencies = currList;
+            ViewBag.alerts = await getUserAlert();
             return View(new ConvertViewModel());
         }
 
@@ -51,6 +55,7 @@ namespace MoneyMaker.Controllers
                 model.ToValue = rate * model.FromValue;
                 var currList = await currencyService.GetCurrencies();
                 ViewBag.currencies = currList;
+                ViewBag.alerts = await getUserAlert();
 
                 var chartData = await apiService.GetMonthRate(model.FromCurrency, model.ToCurrency);
                 model.ChartData = chartData;
@@ -61,24 +66,11 @@ namespace MoneyMaker.Controllers
             }
         }
 
-        public async Task<IActionResult> AddAlert(string toCurr, string fromCurr, float currVal)
+        private async Task<IEnumerable<Alert>> getUserAlert()
         {
-
-            var alert = new Alert();
-            alert.FromCurrency = fromCurr;
-            alert.ToCurrency = toCurr;
-            alert.ConditionValue = (float)Math.Round(currVal, 2);
-            alert.isBelow = false;
-            alert.CreateDate = DateTime.Today;
-            
             System.Security.Claims.ClaimsPrincipal currentUser = this.User;
-            var id = _userManager.GetUserId(User); // Get user id:
-            alert.UserId = id;
-
-            var currList = await currencyService.GetCurrencies();
-            ViewBag.currencies = currList;
-
-            return View("~/Views/Alert/Create.cshtml", alert);
+            var id = _userManager.GetUserId(User);
+            return await alertService.GetUserAlerts(id);
         }
 
         public IActionResult Privacy()

@@ -83,19 +83,37 @@
 
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
-
+    @*My alerts*@
+    <div id="alertBlock">
+    @{
+        if (ViewBag.alerts != null && ViewBag.alerts.Count>0)
+        {
+            foreach (Alert item in ViewBag.alerts)
+            {
+                <p>@item.AlertName</p>
+            }
+        }
+        else
+        {
+            <p>You currently do not have any alerts</p>
+        }
+    }
+    </div>
+    @*Conversion chart*@
     @{
         if (Model.ChartData != null && SignInManager.IsSignedIn(User))
         {
-            <a asp-action="AddAlert" 
+
+            <a asp-controller="Alert"
+                asp-action="Create" 
                 asp-route-fromCurr="@Model.FromCurrency"
                 asp-route-toCurr="@Model.ToCurrency"
-                asp-route-currVal="@Model.ToValue">Add an alert</a>
+                asp-route-currVal="@Model.ToValue"
+                >Add an alert</a>
 
             <div id="chartBlock">
-                <h1>Sample Chart (Need real data to make real chart)</h1>
+                <h2>Conversion chart</h2>
                 <div id="curve_chart" style="margin-left: 15%; width: 1000px; height: 500px"></div>
-                @* TODO: Chart goes here, make visible when theres conversion, else invisible *@
             </div>
         }
         else
