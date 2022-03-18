@@ -40,12 +40,12 @@ public class AlertController : Controller
         return View(await getUserAlert());
     }
 
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create(string toCurr, string fromCurr, float? currVal)
     {
         var alert = new Alert();
-        alert.FromCurrency = "USD";
-        alert.ToCurrency = "CAD";
-        var currValue = await apiService.GetRate("USD", "CAD");
+        alert.FromCurrency = fromCurr == null? "USD" : fromCurr;
+        alert.ToCurrency = toCurr == null ? "CAD" : toCurr;
+        var currValue = await apiService.GetRate(alert.FromCurrency, alert.ToCurrency);
         alert.ConditionValue = (float)Math.Round(currValue, 2);
         alert.isBelow = false;
         alert.CreateDate = DateTime.Today;
@@ -59,6 +59,8 @@ public class AlertController : Controller
 
         return View(alert);
     }
+
+
 
 
     public async Task<IActionResult> onPostCreate(Alert model)
