@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MoneyMaker.Models
 {
-    public class Portfolio
+    public class PortfolioEntry
     {
         [Key]
         [ForeignKey("UserId")]
@@ -14,6 +14,6 @@ namespace MoneyMaker.Models
         public string? EntryCurrencySym { get; set; }
 
         [Required]
-        public int Value { get; set; }
+        public int EntryValue { get; set; }
     }
 }
