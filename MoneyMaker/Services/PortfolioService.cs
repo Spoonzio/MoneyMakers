@@ -38,9 +38,9 @@ namespace MoneyMaker.Services
         }
 
 
-        public async Task<PortfolioEntry> GetPortfolio(string UserId, string EntryCurrencySym, float EntryValue)
+        public async Task<PortfolioEntry> GetPortfolio(string UserId, string EntryCurrencySym)
         {
-            object[] param = { UserId, EntryCurrencySym, EntryValue };
+            object[] param = { UserId, EntryCurrencySym};
             PortfolioEntry port = await _context.PortfolioEntry.FindAsync(param);
             return port;
         }
@@ -78,9 +78,9 @@ namespace MoneyMaker.Services
             return port;
         }
 
-        public async Task<Boolean> DeletePortfolio(string UserId, string EntryCurrencySym, float EntryValue)
+        public async Task<Boolean> DeletePortfolio(string UserId, string EntryCurrencySym)
         {
-            object[] param = { UserId, EntryCurrencySym, EntryValue };
+            object[] param = { UserId, EntryCurrencySym};
             PortfolioEntry port = await _context.PortfolioEntry.FindAsync(param);
             if (port != null)
             {
@@ -92,7 +92,7 @@ namespace MoneyMaker.Services
             return false;
         }
 
-        public async Task<bool> PortfolioExists(string UserId, string EntryCurrencySym, float EntryValue)
+        public async Task<bool> PortfolioExists(string UserId, string EntryCurrencySym)
         {
             return _context.PortfolioEntry.Any(p => (p.UserId == UserId && p.EntryCurrencySym == EntryCurrencySym && p.EntryCurrencySym == EntryCurrencySym));
         }

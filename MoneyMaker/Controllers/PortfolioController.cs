@@ -54,6 +54,52 @@ namespace MoneyMaker.Controllers
             return View("Index", await getUserPortfolio());
         }
 
+        
+        public async Task<IActionResult> Delete(string UserId, string Currency)
+        {
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var id = _userManager.GetUserId(User);
+
+            if (UserId != null
+                && id == UserId
+                && Currency != null)
+            {
+                var successawait = await portfolioService.DeletePortfolio(UserId, Currency);
+            }
+
+            return View("Index", await getUserPortfolio());
+
+        }
+
+        public async Task<IActionResult> Edit(string UserId, string Currency)
+        {
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var id = _userManager.GetUserId(User);
+
+            if (UserId != id)
+            {
+                return View("Index", await getUserPortfolio());
+            }
+            PortfolioEntry portfolio = await portfolioService.GetPortfolio(UserId, Currency);
+            return View(portfolio);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(PortfolioEntry portfolio)
+        {
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var id = _userManager.GetUserId(User);
+
+            if(portfolio.UserId != id)
+            {
+                return View("index", await getUserPortfolio());
+            }
+
+            portfolioService.PutPortfolio(portfolio);
+            return View("index", await getUserPortfolio());
+        }
+
+
         private async Task<IEnumerable<PortfolioEntry>> getUserPortfolio()
         {
             System.Security.Claims.ClaimsPrincipal currentUser = this.User;

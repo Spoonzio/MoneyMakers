@@ -53,7 +53,7 @@
                     </td>
                     <td>
                         <div class="form-group">
-                            <span asp-validation-for="FromValue" class="text-danger"></span>
+                            <span asp-validation-for="FromValue" class="text-danger" ></span>
                             <input asp-for="FromValue" type="number" name="FromValue" id="FromValue">
                         </div>
                     </td>
@@ -67,7 +67,7 @@
 
                 <tr>
                     <td>
-                        <input asp-for="ToValue" type="number" name="ToValue" id="ToValue" value=@Model.ToValue>
+                        <input asp-for="ToValue" readonly type="number" name="ToValue" id="ToValue" value=@Model.ToValue>
                     </td>
 
                     <td>
