@@ -14,6 +14,6 @@ namespace MoneyMaker.Models
         public string? EntryCurrencySym { get; set; }
 
         [Required]
-        public int EntryValue { get; set; }
+        public float EntryValue { get; set; }
     }
 }

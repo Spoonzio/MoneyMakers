@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MoneyMaker.Data;
 using MoneyMaker.Models;
+using MoneyMaker.Models;
 using MoneyMaker.Services;
 
 namespace MoneyMaker.Controllers
@@ -35,8 +36,23 @@ namespace MoneyMaker.Controllers
             return View(await getUserPortfolio());
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            var currList = await currencyService.GetCurrencies();
+            ViewBag.currencies = currList;
+            return View();
+        }
 
-
+        [HttpPost]
+        public async Task<IActionResult> Create(PortfolioEntry portfolio)
+        {
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var id = _userManager.GetUserId(User);
+            portfolio.UserId = id;
+            await portfolioService.PostPortfolio(portfolio);
+            return View("Index", await getUserPortfolio());
+        }
 
         private async Task<IEnumerable<PortfolioEntry>> getUserPortfolio()
         {
