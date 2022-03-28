@@ -19,8 +19,10 @@ public class ApplicationDbContext : IdentityDbContext
 
         modelBuilder.Entity<Currency>().HasData(SampleData.GetCurrencies());
         modelBuilder.Entity<Alert>().HasKey(a => new { a.UserId, a.FromCurrency, a.ToCurrency});
+        modelBuilder.Entity<PortfolioEntry>().HasKey(p => new { p.UserId, p.EntryCurrencySym});
     }
 
     public DbSet<Currency>? Currencies { get; set; }
     public DbSet<Alert>? Alerts { get; set; }
+    public DbSet<PortfolioEntry>? PortfolioEntry { get; set; }
 }

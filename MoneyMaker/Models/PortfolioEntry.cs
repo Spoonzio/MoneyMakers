@@ -3,17 +3,20 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MoneyMaker.Models
 {
-    public class Portfolio
+    public class PortfolioEntry
     {
         [Key]
         [ForeignKey("UserId")]
-        public virtual ApplicationUser? User { get; set; }
+        public string? UserId { get; set; }
 
+        [Key]
         [Required]
         [ForeignKey("CurrencySym")]
         public string? EntryCurrencySym { get; set; }
 
         [Required]
-        public int Value { get; set; }
+        [DataType(DataType.Currency)]
+        [Range(0.0, Double.MaxValue, ErrorMessage = "The field {0} must be greater than {1}.")]
+        public float EntryValue { get; set; }
     }
 }

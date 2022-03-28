@@ -53,7 +53,7 @@
                     </td>
                     <td>
                         <div class="form-group">
-                            <span asp-validation-for="FromValue" class="text-danger"></span>
+                            <span asp-validation-for="FromValue" class="text-danger" ></span>
                             <input asp-for="FromValue" type="number" name="FromValue" id="FromValue">
                         </div>
                     </td>
@@ -67,7 +67,7 @@
 
                 <tr>
                     <td>
-                        <input asp-for="ToValue" type="number" name="ToValue" id="ToValue" value=@Model.ToValue>
+                        <input asp-for="ToValue" readonly type="number" name="ToValue" id="ToValue" value=@Model.ToValue>
                     </td>
 
                     <td>
@@ -83,59 +83,121 @@
 
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
-    @*My alerts*@
-    <div id="alertBlock">
-    @{
-        if (ViewBag.alerts != null && ViewBag.alerts.Count>0)
-        {
-            foreach (Alert item in ViewBag.alerts)
-            {
-                <p>@item.AlertName</p>
-            }
-        }
-        else
-        {
-            <p>You currently do not have any alerts</p>
-        }
-    }
-    </div>
-    @*Conversion chart*@
-    @{
-        if (Model.ChartData != null && SignInManager.IsSignedIn(User))
-        {
 
-            <a asp-controller="Alert"
-                asp-action="Create" 
-                asp-route-fromCurr="@Model.FromCurrency"
-                asp-route-toCurr="@Model.ToCurrency"
-                asp-route-currVal="@Model.ToValue"
-                >Add an alert</a>
-
+    @{
+        if (Model.ChartData != null)
+        {
             <div id="chartBlock">
                 <h2>Conversion chart</h2>
                 <div id="curve_chart" style="margin-left: 15%; width: 1000px; height: 500px"></div>
             </div>
         }
-        else
-        {
-            <div id="featuresBlock">
-                <p>
-                    Store portfolio and see a sum of your money in local currencies
-                </p>
-
-                <p>
-                    Create alert to be updated with the currency exchange rate
-                </p>
-
-                <p>
-                    See a trend of the forex in the past
-                </p>
-            </div>
-        }
     }
 
 
+    @*Conversion chart*@
+    <div id="featureBlock">
+        @{
+            if (Model.ChartData != null && SignInManager.IsSignedIn(User))
+            {
+
+                <a asp-controller="Alert"
+                    asp-action="Create" 
+                    asp-route-fromCurr="@Model.FromCurrency"
+                    asp-route-toCurr="@Model.ToCurrency"
+                    asp-route-currVal="@Model.ToValue"
+                    >Add As Alert</a>
+            }
+            else
+            {
+                <div id="featuresBlock">
+                    <p>
+                        Store portfolio and see a sum of your money in local currencies
+                    </p>
+
+                    <p>
+                        Create alert to be updated with the currency exchange rate
+                    </p>
+
+                    <p>
+                        See a trend of the forex in the past
+                    </p>
+                </div>
+            }
+        }
+    </div>
+    @{
+        if (SignInManager.IsSignedIn(User))
+        {
+                <table>
+        <thead>
+            <tr>
+                <th>My Alerts:</th>
+                <th>My Portfolio:</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                
+                <td>
+                    <div id="alertBlock">
+                        @{
+                            if (ViewBag.alerts != null && ViewBag.alerts.Count>0)
+                            {
+                                foreach (Alert item in ViewBag.alerts)
+                                {
+                                    <p>@item.AlertName</p>
+                                }
+                            }
+                            else
+                            {
+                                <p>There is no alerts active right now</p>
+                            }
+                        }
+                    </div>
+                </td>
+                <td>
+                     <div id="portfolioBlock">
 
 
+
+                        @{
+                            if (ViewBag.portfolioEntry != null && ViewBag.portfolioEntry.Count>0)
+                            {
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Currency</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (PortfolioEntry item in ViewBag.portfolioEntry)
+                                        {
+                                            <tr>
+                                                <td>@item.EntryCurrencySym</td>
+                                                <td>@item.EntryValue</td>
+                                            </tr>
+                                        }
+
+                                            <tr>
+                                                <td>Total (CAD):</td>
+                                                <td>@ViewBag.PortfolioTotal</td>
+                                            </tr>
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <p>There is no portfolio entries right now</p>
+                            }
+                        }
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+        }
+    }
 
 </div>

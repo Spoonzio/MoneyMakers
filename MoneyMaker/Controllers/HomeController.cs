@@ -16,8 +16,10 @@ namespace MoneyMaker.Controllers
         private ApiService apiService;
         private CurrencyService currencyService;
         private AlertService alertService;
+        private PortfolioService portfolioService;
         private readonly UserManager<IdentityUser> _userManager;
 
+        private string LOCAL_CURRENCY = "CAD";
 
         public HomeController(
             ILogger<HomeController> logger,
@@ -30,14 +32,16 @@ namespace MoneyMaker.Controllers
             apiService = new ApiService(httpClientFactory);
             currencyService = new CurrencyService(context);
             alertService = new AlertService(context);
+            portfolioService = new PortfolioService(context);
             _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
         {
-            var currList = await currencyService.GetCurrencies();
-            ViewBag.currencies = currList;
-            ViewBag.alerts = await getUserAlert();
+            ViewBag.currencies = await currencyService.GetCurrencies();
+            ViewBag.alerts = await getUserActiveAlert();
+            ViewBag.portfolioEntry = await getUserPortfolioEntry();
+            ViewBag.PortfolioTotal = await getUserPortfolioSum();
             return View(new ConvertViewModel());
         }
 
@@ -53,9 +57,11 @@ namespace MoneyMaker.Controllers
             if (rate>0){
                 // Response SUCCESS
                 model.ToValue = rate * model.FromValue;
-                var currList = await currencyService.GetCurrencies();
-                ViewBag.currencies = currList;
-                ViewBag.alerts = await getUserAlert();
+
+                ViewBag.currencies = await currencyService.GetCurrencies();
+                ViewBag.alerts = await getUserActiveAlert();
+                ViewBag.portfolioEntry = await getUserPortfolioEntry();
+                ViewBag.PortfolioTotal = await getUserPortfolioSum();
 
                 var chartData = await apiService.GetMonthRate(model.FromCurrency, model.ToCurrency);
                 model.ChartData = chartData;
@@ -71,6 +77,52 @@ namespace MoneyMaker.Controllers
             System.Security.Claims.ClaimsPrincipal currentUser = this.User;
             var id = _userManager.GetUserId(User);
             return await alertService.GetUserAlerts(id);
+        }
+
+        private async Task<IEnumerable<Alert>> getUserActiveAlert()
+        {
+            var userAlerts = await getUserAlert();
+            List<Alert> userActiveAlerts = new List<Alert>();
+
+            foreach (var alert in userAlerts)
+            {
+                var currValue = await apiService.GetRate(alert.FromCurrency, alert.ToCurrency);
+
+                if (alert.isBelow && currValue < alert.ConditionValue)
+                {
+                    userActiveAlerts.Add(alert);
+                }
+                else if (!alert.isBelow && currValue > alert.ConditionValue)
+                {
+                    userActiveAlerts.Add(alert);
+                }
+            }
+
+            return userActiveAlerts;
+        }
+
+        private async Task<IEnumerable<PortfolioEntry>> getUserPortfolioEntry()
+        {
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var id = _userManager.GetUserId(User);
+
+            var userPortfolio = await portfolioService.GetUserPortfolio(id);
+            return userPortfolio;
+        }
+
+        private async Task<string> getUserPortfolioSum()
+        {
+            float sum = 0;
+            var portfolios = await getUserPortfolioEntry();
+            List<PortfolioEntry> portfolioEntries = portfolios.ToList();
+            foreach (var portfolioEntry in portfolioEntries)
+            {
+                var rate = await apiService.GetRate(portfolioEntry.EntryCurrencySym, LOCAL_CURRENCY);
+                float subTotal = rate * portfolioEntry.EntryValue;
+
+                sum += subTotal;
+            }
+            return sum.ToString("0.00");
         }
 
         public IActionResult Privacy()

@@ -61,8 +61,6 @@ public class AlertController : Controller
     }
 
 
-
-
     public async Task<IActionResult> onPostCreate(Alert model)
     {
         if(model != null)
