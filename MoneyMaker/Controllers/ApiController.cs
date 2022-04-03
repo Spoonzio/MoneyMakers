@@ -85,21 +85,143 @@ public class ApiController : ControllerBase
     // GET api/alert
     [HttpGet("alert")]
     [AllowAnonymous]
-    public async Task<ApiResponse> getUserAlert()
+    public async Task<ApiResponse> getUserAlert(UserApiRequest request)
     {
-        string userid = _userManager.GetUserId(User);
         ApiResponse response = new ApiResponse();
 
-        if(User != null && userid != null && userid.Length>0){
+        string userid = request.UserId;
+        var user = await _userManager.FindByIdAsync(userid);
+
+
+        if (user != null && userid != null && userid.Length > 0)
+        {
             response.Code = "200";
             response.Data.Add("alert", await alertService.GetUserAlerts(userid));
             return response;
-        }else{
+        }
+        else
+        {
             response.Code = "400";
-            response.Data.Add("message", "not logged in");
+            response.Data.Add("message", "invalid userid / not logged in");
             return response;
         }
     }
+
+    // POST api/alert
+    [HttpPost("alert")]
+    [AllowAnonymous]
+    public async Task<ApiResponse> postUserAlert(Alert request)
+    {
+        ApiResponse response = new ApiResponse();
+
+        Alert createAlert = new Alert();
+        createAlert.UserId = request.UserId;
+        createAlert.AlertName = request.AlertName;
+        createAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2);
+        createAlert.CreateDate = DateTime.Today;
+        createAlert.FromCurrency = request.FromCurrency;
+        createAlert.ToCurrency = request.ToCurrency;
+        createAlert.isBelow = request.isBelow;
+
+        if (createAlert.UserId is null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Not logged in");
+            return response;
+        }
+
+        bool ex = await alertService.AlertExists(createAlert.UserId, createAlert.FromCurrency, createAlert.ToCurrency);
+
+        if (ex)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Alert for this conversion already exists, try editing");
+            return response;
+        }
+        else
+        {
+            await alertService.PostAlert(createAlert);
+            response.Code = "200";
+            response.Data.Add("message", "Success");
+            return response;
+        }
+    }
+
+    // PUT api/alert
+    [HttpPut("alert")]
+    [AllowAnonymous]
+    public async Task<ApiResponse> putUserAlert(Alert request)
+    {
+        ApiResponse response = new ApiResponse();
+
+        Alert editAlert = new Alert();
+        editAlert.UserId = request.UserId;
+        editAlert.AlertName = request.AlertName;
+        editAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2);
+        editAlert.CreateDate = DateTime.Today;
+        editAlert.FromCurrency = request.FromCurrency;
+        editAlert.ToCurrency = request.ToCurrency;
+        editAlert.isBelow = request.isBelow;
+
+        if (editAlert.UserId is null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Not logged in");
+            return response;
+        }
+
+        bool ex = await alertService.AlertExists(editAlert.UserId, editAlert.FromCurrency, editAlert.ToCurrency);
+
+        if (ex)
+        {
+            await alertService.PutAlert(editAlert);
+            response.Code = "200";
+            response.Data.Add("message", "Success");
+            return response;
+
+
+        }
+        else
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Alert for this conversion does not exists, try making one");
+            return response;
+        }
+    }
+
+    // DELETE api/alert
+    [HttpDelete("alert")]
+    [AllowAnonymous]
+    public async Task<ApiResponse> deleteUserAlert(Alert request)
+    {
+        ApiResponse response = new ApiResponse();
+
+        Alert editAlert = new Alert();
+        editAlert.UserId = request.UserId;
+        editAlert.AlertName = request.AlertName;
+        editAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2);
+        editAlert.CreateDate = DateTime.Today;
+        editAlert.FromCurrency = request.FromCurrency;
+        editAlert.ToCurrency = request.ToCurrency;
+        editAlert.isBelow = request.isBelow;
+
+        if (editAlert.UserId is null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Not logged in / invalid request");
+            return response;
+        }
+        else
+        {
+            var successawait = await alertService.DeleteAlert(editAlert.UserId, editAlert.FromCurrency, editAlert.ToCurrency);
+
+            response.Code = "200";
+            response.Data.Add("deleted", successawait);
+            return response;
+        }
+    }
+
+
 
 
 
@@ -109,27 +231,37 @@ public class ApiController : ControllerBase
     // GET api/portfolio
     [HttpGet("portfolio")]
     [AllowAnonymous]
-    public async Task<ApiResponse> getUserPortfolio()
+    public async Task<ApiResponse> getUserPortfolio(UserApiRequest request)
     {
-        string userid = _userManager.GetUserId(User);
         ApiResponse response = new ApiResponse();
-        if(userid.Length>0){
+
+        string userid = request.UserId;
+        var user = await _userManager.FindByIdAsync(userid);
+
+        if (user != null && userid.Length > 0)
+        {
             response.Code = "200";
             response.Data.Add("portfolio", await portfolioService.GetUserPortfolio(userid));
             return response;
-        }else{
+        }
+        else
+        {
             response.Code = "400";
-            response.Data.Add("message", "not logged in");
+            response.Data.Add("message", "invalid userid / not logged in");
             return response;
         }
     }
 
     [HttpGet("portfolio/sum")]
-    public async Task<ApiResponse> getUserPortfolioSum()
+    public async Task<ApiResponse> getUserPortfolioSum(UserApiRequest request)
     {
-        string userid = _userManager.GetUserId(User);
         ApiResponse response = new ApiResponse();
-        if(userid.Length>0){
+
+        string userid = request.UserId;
+        var user = await _userManager.FindByIdAsync(userid);
+
+        if (user != null && userid.Length > 0)
+        {
             response.Code = "200";
 
             float sum = 0;
@@ -144,11 +276,13 @@ public class ApiController : ControllerBase
                 sum += subTotal;
             }
 
-            response.Data.Add("sum", sum.ToString());            
+            response.Data.Add("sum", sum.ToString());
             return response;
-        }else{
+        }
+        else
+        {
             response.Code = "400";
-            response.Data.Add("message", "not logged in");
+            response.Data.Add("message", "invalid userid / not logged in");
             return response;
         }
     }
@@ -163,7 +297,7 @@ public class ApiController : ControllerBase
     {
 
         ApiResponse response = new ApiResponse();
-        
+
         var user = _userManager.Users.SingleOrDefault(u => u.UserName == cred.Email);
         if (user is null)
         {
@@ -173,11 +307,12 @@ public class ApiController : ControllerBase
         }
 
         var result = await _signInManager.PasswordSignInAsync(cred.Email, cred.Password, false, lockoutOnFailure: true);
-        
+
         if (result.Succeeded)
         {
             response.Code = "200";
             response.Data.Add("message", "Logged in");
+            response.Data.Add("userid", user.Id);
             return response;
         }
         if (result.RequiresTwoFactor)
@@ -201,9 +336,12 @@ public class ApiController : ControllerBase
 
         response.Code = "200";
 
-        if(userid==null){
+        if (userid == null)
+        {
             response.Data.Add("login", false);
-        }else{
+        }
+        else
+        {
             response.Data.Add("login", true);
         }
 
@@ -239,7 +377,9 @@ public class ApiController : ControllerBase
             response.Code = "200";
             response.Data.Add("message", "Registration completed");
             return response;
-        }else{
+        }
+        else
+        {
             response.Code = "400";
             response.Data.Add("message", userCreateResult.Errors.First().Description);
             return response;
