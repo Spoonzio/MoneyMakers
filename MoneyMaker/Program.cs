@@ -17,12 +17,18 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddHttpClient();
 
-
 builder.Services.AddAuthentication().AddGoogle(googleOptions =>
 {
     googleOptions.ClientId = "1037870610256-smdnrodfk6ighgq42slp9o4q209hdj64.apps.googleusercontent.com";
     googleOptions.ClientSecret = "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";
 });
+
+// Add Cors
+builder.Services.AddCors(o => o.AddPolicy("Policy", builder => {
+    builder.AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader();
+}));
 
 var app = builder.Build();
 
@@ -59,5 +65,7 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 }
 
+app.UseRouting();
+app.UseCors();
 
 app.Run();
