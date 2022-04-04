@@ -21,7 +21,7 @@ public class CurrencyService
     }
 
 
-    public async Task<ActionResult<Currency>> GetCurrency(string sym)
+    public async Task<Currency> GetCurrency(string sym)
     {
         Currency Currency = await _context.Currencies.FindAsync(sym);
         return Currency;
