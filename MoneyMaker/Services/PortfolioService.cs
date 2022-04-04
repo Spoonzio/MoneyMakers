@@ -62,7 +62,7 @@ namespace MoneyMaker.Services
         }
 
 
-        public async Task<ActionResult<PortfolioEntry>> PostPortfolio(PortfolioEntry port)
+        public async Task<PortfolioEntry> PostPortfolio(PortfolioEntry port)
         {
             _context.PortfolioEntry.Add(port);
 

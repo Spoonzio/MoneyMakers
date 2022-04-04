@@ -1,9 +1,15 @@
-﻿using AutoMapper;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MoneyMaker.Data;
 using MoneyMaker.Models;
 using MoneyMaker.Services;
@@ -21,9 +27,7 @@ public class ApiController : ControllerBase
     private AlertService alertService;
     private PortfolioService portfolioService;
     private readonly UserManager<IdentityUser> _userManager;
-
     private readonly SignInManager<IdentityUser> _signInManager;
-
     private string LOCAL_CURRENCY = "CAD";
 
     public ApiController(
@@ -84,14 +88,16 @@ public class ApiController : ControllerBase
     //=====================================
     // GET api/alert
     [HttpGet("alert")]
+    
     [AllowAnonymous]
-    public async Task<ApiResponse> getUserAlert(UserApiRequest request)
+    public async Task<ApiResponse> getUserAlert([FromQuery] string Token)
     {
         ApiResponse response = new ApiResponse();
 
-        string userid = request.UserId;
-        var user = await _userManager.FindByIdAsync(userid);
+        var searchedUser = await getUserIdWithToken(Token);
 
+        string userid = searchedUser.Id;
+        var user = await _userManager.FindByIdAsync(userid);
 
         if (user != null && userid != null && userid.Length > 0)
         {
@@ -110,9 +116,10 @@ public class ApiController : ControllerBase
     // POST api/alert
     [HttpPost("alert")]
     [AllowAnonymous]
-    public async Task<ApiResponse> postUserAlert(Alert request)
+    public async Task<ApiResponse> postUserAlert(Alert request, [FromQuery] string Token)
     {
         ApiResponse response = new ApiResponse();
+        var user = getUserIdWithToken(Token);
 
         Alert createAlert = new Alert();
         createAlert.UserId = request.UserId;
@@ -123,7 +130,7 @@ public class ApiController : ControllerBase
         createAlert.ToCurrency = request.ToCurrency;
         createAlert.isBelow = request.isBelow;
 
-        if (createAlert.UserId is null)
+        if (user is null)
         {
             response.Code = "400";
             response.Data.Add("message", "Not logged in");
@@ -235,7 +242,7 @@ public class ApiController : ControllerBase
     {
         ApiResponse response = new ApiResponse();
 
-        string userid = request.UserId;
+        string userid = request.Token;
         var user = await _userManager.FindByIdAsync(userid);
 
         if (user != null && userid.Length > 0)
@@ -252,12 +259,14 @@ public class ApiController : ControllerBase
         }
     }
 
+    // GET api/portfolio/sum
     [HttpGet("portfolio/sum")]
+    [AllowAnonymous]
     public async Task<ApiResponse> getUserPortfolioSum(UserApiRequest request)
     {
         ApiResponse response = new ApiResponse();
 
-        string userid = request.UserId;
+        string userid = request.Token;
         var user = await _userManager.FindByIdAsync(userid);
 
         if (user != null && userid.Length > 0)
@@ -287,6 +296,91 @@ public class ApiController : ControllerBase
         }
     }
 
+    // POST api/portfolio
+    [HttpPost("portfolio")]
+    [AllowAnonymous]
+    public async Task<ApiResponse> postUserPortfolio(PortfolioEntry port)
+    {
+        ApiResponse response = new ApiResponse();
+
+        var userid = port.UserId;
+        var user = await _userManager.FindByIdAsync(userid);
+
+        if (user is not null)
+        {
+            await portfolioService.PostPortfolio(port);
+            response.Code = "200";
+            response.Data.Add("message", "created");
+            return response;
+        }
+        else
+        {
+            response.Code = "400";
+            response.Data.Add("message", "invalid userid / not logged in");
+            return response;
+        }
+    }
+
+    // PUT api/portfolio
+    [HttpPut("portfolio")]
+    [AllowAnonymous]
+    public async Task<ApiResponse> putUserPortfolio(PortfolioEntry port)
+    {
+        ApiResponse response = new ApiResponse();
+
+        var userid = port.UserId;
+        var user = await _userManager.FindByIdAsync(userid);
+
+        if (user is not null)
+        {
+            await portfolioService.PutPortfolio(port);
+            response.Code = "200";
+            response.Data.Add("message", "updated");
+            return response;
+        }
+        else
+        {
+            response.Code = "400";
+            response.Data.Add("message", "invalid userid / not logged in");
+            return response;
+        }
+    }
+
+    // DELETE api/portfolio
+    [HttpDelete("portfolio")]
+    [AllowAnonymous]
+    public async Task<ApiResponse> deleteUserPortfolio(PortfolioEntry port)
+    {
+        ApiResponse response = new ApiResponse();
+
+        var userid = port.UserId;
+        var user = await _userManager.FindByIdAsync(userid);
+
+        if (user is not null)
+        {
+            bool deleted = await portfolioService.DeletePortfolio(port.UserId, port.EntryCurrencySym);
+
+            if (deleted)
+            {
+                response.Code = "200";
+                response.Data.Add("message", "deleted");
+                return response;
+            }
+            else
+            {
+                response.Code = "400";
+                response.Data.Add("message", "fail to delete");
+                return response;
+            }
+        }
+        else
+        {
+            response.Code = "400";
+            response.Data.Add("message", "invalid userid / not logged in");
+            return response;
+        }
+    }
+
     //=====================================
     // Login & Register
     //=====================================
@@ -299,6 +393,7 @@ public class ApiController : ControllerBase
         ApiResponse response = new ApiResponse();
 
         var user = _userManager.Users.SingleOrDefault(u => u.UserName == cred.Email);
+        
         if (user is null)
         {
             response.Code = "404";
@@ -307,12 +402,22 @@ public class ApiController : ControllerBase
         }
 
         var result = await _signInManager.PasswordSignInAsync(cred.Email, cred.Password, false, lockoutOnFailure: true);
-
+                
         if (result.Succeeded)
         {
+            var provider = MD5.Create();
+            string salt = user.Email;
+            string password = user.PasswordHash;
+            byte[] bytes = provider.ComputeHash(Encoding.ASCII.GetBytes(salt + password));
+            string computedHash = BitConverter.ToString(bytes);
+
+            var hashText = System.Text.Encoding.UTF8.GetBytes(computedHash);
+            var token = System.Convert.ToBase64String(hashText);
+
             response.Code = "200";
             response.Data.Add("message", "Logged in");
             response.Data.Add("userid", user.Id);
+            response.Data.Add("token" , token);
             return response;
         }
         if (result.RequiresTwoFactor)
@@ -324,6 +429,27 @@ public class ApiController : ControllerBase
         response.Code = "400";
         response.Data.Add("message", "Failed login");
         return response;
+    }
+
+    private async Task<IdentityUser> getUserIdWithToken(string token){
+        List<IdentityUser> userlist = await _userManager.Users.ToListAsync();
+        foreach (var user in userlist)
+        {
+            var provider = MD5.Create();
+            string salt = user.Email;
+            string password = user.PasswordHash;
+            byte[] bytes = provider.ComputeHash(Encoding.ASCII.GetBytes(salt + password));
+            string computedHash = BitConverter.ToString(bytes);
+
+            var hashText = System.Text.Encoding.UTF8.GetBytes(computedHash);
+            var userToken = System.Convert.ToBase64String(hashText);
+
+            if(userToken.Equals(token)){
+                return user;
+            }
+        }
+
+        return null;
     }
 
     // get api/isLogin
@@ -365,14 +491,18 @@ public class ApiController : ControllerBase
     [AllowAnonymous]
     public async Task<ApiResponse> getRegisterAsync(RegisterCredential cred)
     {
-        var user = new IdentityUser(cred.Email);
-        user.Email = cred.Email;
+        var user = new ApplicationUser
+        {
+            Email = cred.Email,
+            UserName = cred.Email,
+            SecurityStamp = Guid.NewGuid().ToString()
+        };
 
-        var userCreateResult = await _userManager.CreateAsync(user, cred.Password);
+        var result = await _userManager.CreateAsync(user, cred.Password);
 
         ApiResponse response = new ApiResponse();
 
-        if (userCreateResult.Succeeded)
+        if (result.Succeeded)
         {
             response.Code = "200";
             response.Data.Add("message", "Registration completed");
@@ -381,7 +511,7 @@ public class ApiController : ControllerBase
         else
         {
             response.Code = "400";
-            response.Data.Add("message", userCreateResult.Errors.First().Description);
+            response.Data.Add("message", result.Errors.First().Description);
             return response;
         }
     }
