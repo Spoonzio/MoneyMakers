@@ -108,7 +108,7 @@ public class ApiController : ControllerBase
         else
         {
             response.Code = "400";
-            response.Data.Add("message", "invalid userid / not logged in");
+            response.Data.Add("message", "Invalid token");
             return response;
         }
     }
@@ -119,10 +119,11 @@ public class ApiController : ControllerBase
     public async Task<ApiResponse> postUserAlert(Alert request, [FromQuery] string Token)
     {
         ApiResponse response = new ApiResponse();
-        var user = getUserIdWithToken(Token);
+        var user = await getUserIdWithToken(Token);
 
         Alert createAlert = new Alert();
-        createAlert.UserId = request.UserId;
+
+        createAlert.UserId = user.Id;
         createAlert.AlertName = request.AlertName;
         createAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2);
         createAlert.CreateDate = DateTime.Today;
@@ -133,7 +134,7 @@ public class ApiController : ControllerBase
         if (user is null)
         {
             response.Code = "400";
-            response.Data.Add("message", "Not logged in");
+            response.Data.Add("message", "Invalid token");
             return response;
         }
 
@@ -157,12 +158,14 @@ public class ApiController : ControllerBase
     // PUT api/alert
     [HttpPut("alert")]
     [AllowAnonymous]
-    public async Task<ApiResponse> putUserAlert(Alert request)
+    public async Task<ApiResponse> putUserAlert(Alert request, [FromQuery] string Token)
     {
+
         ApiResponse response = new ApiResponse();
+        var user = await getUserIdWithToken(Token);
 
         Alert editAlert = new Alert();
-        editAlert.UserId = request.UserId;
+        editAlert.UserId = user.Id;
         editAlert.AlertName = request.AlertName;
         editAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2);
         editAlert.CreateDate = DateTime.Today;
@@ -173,7 +176,7 @@ public class ApiController : ControllerBase
         if (editAlert.UserId is null)
         {
             response.Code = "400";
-            response.Data.Add("message", "Not logged in");
+            response.Data.Add("message", "Invalid token");
             return response;
         }
 
@@ -185,8 +188,6 @@ public class ApiController : ControllerBase
             response.Code = "200";
             response.Data.Add("message", "Success");
             return response;
-
-
         }
         else
         {
@@ -199,28 +200,29 @@ public class ApiController : ControllerBase
     // DELETE api/alert
     [HttpDelete("alert")]
     [AllowAnonymous]
-    public async Task<ApiResponse> deleteUserAlert(Alert request)
+    public async Task<ApiResponse> deleteUserAlert(Alert request, [FromQuery] string Token)
     {
         ApiResponse response = new ApiResponse();
+        var user = await getUserIdWithToken(Token);
+        
+        Alert delAlert = new Alert();
+        delAlert.UserId = user.Id;
+        delAlert.AlertName = request.AlertName;
+        delAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2);
+        delAlert.CreateDate = DateTime.Today;
+        delAlert.FromCurrency = request.FromCurrency;
+        delAlert.ToCurrency = request.ToCurrency;
+        delAlert.isBelow = request.isBelow;
 
-        Alert editAlert = new Alert();
-        editAlert.UserId = request.UserId;
-        editAlert.AlertName = request.AlertName;
-        editAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2);
-        editAlert.CreateDate = DateTime.Today;
-        editAlert.FromCurrency = request.FromCurrency;
-        editAlert.ToCurrency = request.ToCurrency;
-        editAlert.isBelow = request.isBelow;
-
-        if (editAlert.UserId is null)
+        if (delAlert.UserId is null)
         {
             response.Code = "400";
-            response.Data.Add("message", "Not logged in / invalid request");
+            response.Data.Add("message", "Invalid token");
             return response;
         }
         else
         {
-            var successawait = await alertService.DeleteAlert(editAlert.UserId, editAlert.FromCurrency, editAlert.ToCurrency);
+            var successawait = await alertService.DeleteAlert(delAlert.UserId, delAlert.FromCurrency, delAlert.ToCurrency);
 
             response.Code = "200";
             response.Data.Add("deleted", successawait);
