@@ -88,13 +88,62 @@ public class ApiController : ControllerBase
     //=====================================
     // GET api/alert
     [HttpGet("alert")]
-    
     [AllowAnonymous]
-    public async Task<ApiResponse> getUserAlert([FromQuery] string Token)
+    public async Task<ApiResponse> getUserAlert([FromQuery] string Token, 
+        [FromQuery] string FromCurrency,
+        [FromQuery] string ToCurrency)
+    {
+        ApiResponse response = new ApiResponse();
+        var searchedUser = await getUserIdWithToken(Token);
+
+        if(searchedUser==null){
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
+
+        string userid = searchedUser.Id;
+        var user = await _userManager.FindByIdAsync(userid);
+
+        var fromCurr = await currencyService.GetCurrency(FromCurrency);
+        var toCurr = await currencyService.GetCurrency(ToCurrency);
+
+        if (user != null && userid != null && userid.Length > 0
+            && fromCurr != null && toCurr != null)
+        {
+            response.Code = "200";
+            var alert = await alertService.GetAlert(userid, fromCurr.CurrencySym, toCurr.CurrencySym);
+            if(alert != null){
+                response.Data.Add("alert", alert);
+                return response;
+            }else{
+                response.Code = "400";
+                response.Data.Add("message", "Alert not found");
+                return response;
+            }
+        }else{
+            response.Code = "400";
+            response.Data.Add("message", "Invalid query");
+            return response;
+        }
+    }
+
+
+    // GET api/alerts
+    [HttpGet("alerts")]
+    [AllowAnonymous]
+    public async Task<ApiResponse> getUserAlerts([FromQuery] string Token)
     {
         ApiResponse response = new ApiResponse();
 
         var searchedUser = await getUserIdWithToken(Token);
+
+        if(searchedUser==null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
 
         string userid = searchedUser.Id;
         var user = await _userManager.FindByIdAsync(userid);
@@ -104,13 +153,12 @@ public class ApiController : ControllerBase
             response.Code = "200";
             response.Data.Add("alert", await alertService.GetUserAlerts(userid));
             return response;
-        }
-        else
-        {
+        }else{
             response.Code = "400";
-            response.Data.Add("message", "Invalid token");
+            response.Data.Add("message", "Invalid query");
             return response;
         }
+        
     }
 
     // POST api/alert
@@ -120,6 +168,13 @@ public class ApiController : ControllerBase
     {
         ApiResponse response = new ApiResponse();
         var user = await getUserIdWithToken(Token);
+        if(user==null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
+
 
         Alert createAlert = new Alert();
 
@@ -130,13 +185,6 @@ public class ApiController : ControllerBase
         createAlert.FromCurrency = request.FromCurrency;
         createAlert.ToCurrency = request.ToCurrency;
         createAlert.isBelow = request.isBelow;
-
-        if (user is null)
-        {
-            response.Code = "400";
-            response.Data.Add("message", "Invalid token");
-            return response;
-        }
 
         bool ex = await alertService.AlertExists(createAlert.UserId, createAlert.FromCurrency, createAlert.ToCurrency);
 
@@ -163,22 +211,21 @@ public class ApiController : ControllerBase
 
         ApiResponse response = new ApiResponse();
         var user = await getUserIdWithToken(Token);
-
-        Alert editAlert = new Alert();
-        editAlert.UserId = user.Id;
-        editAlert.AlertName = request.AlertName;
-        editAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2);
-        editAlert.CreateDate = DateTime.Today;
-        editAlert.FromCurrency = request.FromCurrency;
-        editAlert.ToCurrency = request.ToCurrency;
-        editAlert.isBelow = request.isBelow;
-
-        if (editAlert.UserId is null)
+        if (user is null)
         {
             response.Code = "400";
             response.Data.Add("message", "Invalid token");
             return response;
         }
+
+        Alert editAlert = new Alert();
+        editAlert.UserId = user.Id;
+        editAlert.AlertName = request.AlertName;
+        editAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2) < 0? 0 : (float)Math.Round(request.ConditionValue, 2);
+        editAlert.CreateDate = DateTime.Today;
+        editAlert.FromCurrency = request.FromCurrency;
+        editAlert.ToCurrency = request.ToCurrency;
+        editAlert.isBelow = request.isBelow;
 
         bool ex = await alertService.AlertExists(editAlert.UserId, editAlert.FromCurrency, editAlert.ToCurrency);
 
@@ -204,6 +251,13 @@ public class ApiController : ControllerBase
     {
         ApiResponse response = new ApiResponse();
         var user = await getUserIdWithToken(Token);
+
+        if (user is null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
         
         Alert delAlert = new Alert();
         delAlert.UserId = user.Id;
@@ -214,18 +268,19 @@ public class ApiController : ControllerBase
         delAlert.ToCurrency = request.ToCurrency;
         delAlert.isBelow = request.isBelow;
 
-        if (delAlert.UserId is null)
-        {
-            response.Code = "400";
-            response.Data.Add("message", "Invalid token");
-            return response;
-        }
-        else
+        var findAlert = await alertService.GetAlert(delAlert.UserId, delAlert.FromCurrency, delAlert.ToCurrency);
+        
+
+        if(findAlert !=null )
         {
             var successawait = await alertService.DeleteAlert(delAlert.UserId, delAlert.FromCurrency, delAlert.ToCurrency);
 
             response.Code = "200";
             response.Data.Add("deleted", successawait);
+            return response;
+        }else{
+            response.Code = "400";
+            response.Data.Add("message", "Not found");
             return response;
         }
     }
