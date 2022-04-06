@@ -13,6 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 using MoneyMaker.Data;
 using MoneyMaker.Models;
 using MoneyMaker.Services;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace MoneyMaker.Controllers;
 
@@ -555,22 +557,46 @@ public class ApiController : ControllerBase
             SecurityStamp = Guid.NewGuid().ToString()
         };
 
-        var result = await _userManager.CreateAsync(user, cred.Password);
-
+        var createResult = await _userManager.CreateAsync(user, cred.Password);
+        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        
+        var confirmResult = await _userManager.ConfirmEmailAsync(user, token);
+        
         ApiResponse response = new ApiResponse();
 
-        if (result.Succeeded)
+        if (createResult.Succeeded && confirmResult.Succeeded)
         {
             response.Code = "200";
+            // sendEmail(cred.Email, token);
             response.Data.Add("message", "Registration completed");
             return response;
         }
-        else
+        else if(!createResult.Succeeded)
         {
             response.Code = "400";
-            response.Data.Add("message", result.Errors.First().Description);
+            response.Data.Add("message", createResult.Errors.First().Description);
+            return response;
+        }else{
+            response.Code = "400";
+            response.Data.Add("message", confirmResult.Errors.First().Description);
             return response;
         }
+    }
+
+
+
+    private static async Task sendEmail(string email, string token)
+    {
+        var apiKey = "SG.FzVan0PYThi8SiQHwDJ8Kg." + "4ZEtXGwIl3f9m4WTpocV4fY80II7ndSpXjnkxTNpyNg";
+        var client = new SendGridClient(apiKey);
+        var from = new EmailAddress("ypan35@my.bcit.ca", "Jason Pan");
+        var subject = "MoneyMaker Confirmation";
+        var to = new EmailAddress(email);
+        var plainTextContent = "Confirmation link:" + token;
+        var htmlContent = "Confirmation link: <strong>" + token+ "</strong>";
+        var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+        var response = await client.SendEmailAsync(msg);
+        
     }
 
 }
