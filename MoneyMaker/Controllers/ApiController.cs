@@ -91,14 +91,15 @@ public class ApiController : ControllerBase
     // GET api/alert
     [HttpGet("alert")]
     [AllowAnonymous]
-    public async Task<ApiResponse> getUserAlert([FromQuery] string Token, 
+    public async Task<ApiResponse> getUserAlert([FromQuery] string Token,
         [FromQuery] string FromCurrency,
         [FromQuery] string ToCurrency)
     {
         ApiResponse response = new ApiResponse();
         var searchedUser = await getUserIdWithToken(Token);
 
-        if(searchedUser==null){
+        if (searchedUser == null)
+        {
             response.Code = "400";
             response.Data.Add("message", "Invalid token");
             return response;
@@ -115,15 +116,20 @@ public class ApiController : ControllerBase
         {
             response.Code = "200";
             var alert = await alertService.GetAlert(userid, fromCurr.CurrencySym, toCurr.CurrencySym);
-            if(alert != null){
+            if (alert != null)
+            {
                 response.Data.Add("alert", alert);
                 return response;
-            }else{
+            }
+            else
+            {
                 response.Code = "400";
                 response.Data.Add("message", "Alert not found");
                 return response;
             }
-        }else{
+        }
+        else
+        {
             response.Code = "400";
             response.Data.Add("message", "Invalid query");
             return response;
@@ -140,7 +146,7 @@ public class ApiController : ControllerBase
 
         var searchedUser = await getUserIdWithToken(Token);
 
-        if(searchedUser==null)
+        if (searchedUser == null)
         {
             response.Code = "400";
             response.Data.Add("message", "Invalid token");
@@ -155,12 +161,14 @@ public class ApiController : ControllerBase
             response.Code = "200";
             response.Data.Add("alert", await alertService.GetUserAlerts(userid));
             return response;
-        }else{
+        }
+        else
+        {
             response.Code = "400";
             response.Data.Add("message", "Invalid query");
             return response;
         }
-        
+
     }
 
     // POST api/alert
@@ -169,18 +177,19 @@ public class ApiController : ControllerBase
     public async Task<ApiResponse> postUserAlert(Alert request, [FromQuery] string Token)
     {
         ApiResponse response = new ApiResponse();
-        var user = await getUserIdWithToken(Token);
-        if(user==null)
+
+        var searchedUser = await getUserIdWithToken(Token);
+
+        if (searchedUser == null)
         {
             response.Code = "400";
             response.Data.Add("message", "Invalid token");
             return response;
         }
 
-
         Alert createAlert = new Alert();
 
-        createAlert.UserId = user.Id;
+        createAlert.UserId = searchedUser.Id;
         createAlert.AlertName = request.AlertName;
         createAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2);
         createAlert.CreateDate = DateTime.Today;
@@ -223,7 +232,7 @@ public class ApiController : ControllerBase
         Alert editAlert = new Alert();
         editAlert.UserId = user.Id;
         editAlert.AlertName = request.AlertName;
-        editAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2) < 0? 0 : (float)Math.Round(request.ConditionValue, 2);
+        editAlert.ConditionValue = (float)Math.Round(request.ConditionValue, 2) < 0 ? 0 : (float)Math.Round(request.ConditionValue, 2);
         editAlert.CreateDate = DateTime.Today;
         editAlert.FromCurrency = request.FromCurrency;
         editAlert.ToCurrency = request.ToCurrency;
@@ -260,7 +269,7 @@ public class ApiController : ControllerBase
             response.Data.Add("message", "Invalid token");
             return response;
         }
-        
+
         Alert delAlert = new Alert();
         delAlert.UserId = user.Id;
         delAlert.AlertName = request.AlertName;
@@ -271,16 +280,18 @@ public class ApiController : ControllerBase
         delAlert.isBelow = request.isBelow;
 
         var findAlert = await alertService.GetAlert(delAlert.UserId, delAlert.FromCurrency, delAlert.ToCurrency);
-        
 
-        if(findAlert !=null )
+
+        if (findAlert != null)
         {
             var successawait = await alertService.DeleteAlert(delAlert.UserId, delAlert.FromCurrency, delAlert.ToCurrency);
 
             response.Code = "200";
             response.Data.Add("deleted", successawait);
             return response;
-        }else{
+        }
+        else
+        {
             response.Code = "400";
             response.Data.Add("message", "Not found");
             return response;
@@ -297,23 +308,73 @@ public class ApiController : ControllerBase
     // GET api/portfolio
     [HttpGet("portfolio")]
     [AllowAnonymous]
-    public async Task<ApiResponse> getUserPortfolio(UserApiRequest request)
+    public async Task<ApiResponse> getUserPortfolio([FromQuery] string Token,
+        [FromQuery] string CurrencySym)
     {
         ApiResponse response = new ApiResponse();
 
-        string userid = request.Token;
-        var user = await _userManager.FindByIdAsync(userid);
+        var searchedUser = await getUserIdWithToken(Token);
 
-        if (user != null && userid.Length > 0)
+        if (searchedUser == null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
+
+        string userid = searchedUser.Id;
+
+        Currency currency = await currencyService.GetCurrency(CurrencySym);
+        PortfolioEntry pe = await portfolioService.GetPortfolio(userid, currency.CurrencySym);
+        if (currency != null && pe != null && userid.Length > 0)
         {
             response.Code = "200";
-            response.Data.Add("portfolio", await portfolioService.GetUserPortfolio(userid));
+            response.Data.Add("portfolio", pe);
+            return response;
+        }
+        else if (currency == null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "invalid currency symbol");
             return response;
         }
         else
         {
             response.Code = "400";
-            response.Data.Add("message", "invalid userid / not logged in");
+            response.Data.Add("message", "user does not have this portfolio");
+            return response;
+        }
+    }
+
+    // GET api/portfolios
+    [HttpGet("portfolios")]
+    [AllowAnonymous]
+    public async Task<ApiResponse> getUserPortfolios([FromQuery] string Token)
+    {
+        ApiResponse response = new ApiResponse();
+
+        var searchedUser = await getUserIdWithToken(Token);
+
+        if (searchedUser == null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
+
+        string userid = searchedUser.Id;
+
+        var peList = await portfolioService.GetUserPortfolio(userid);
+        if (peList != null && userid.Length > 0)
+        {
+            response.Code = "200";
+            response.Data.Add("portfolio", peList);
+            return response;
+        }
+        else
+        {
+            response.Code = "400";
+            response.Data.Add("message", "invalid id/portfolios");
             return response;
         }
     }
@@ -321,19 +382,25 @@ public class ApiController : ControllerBase
     // GET api/portfolio/sum
     [HttpGet("portfolio/sum")]
     [AllowAnonymous]
-    public async Task<ApiResponse> getUserPortfolioSum(UserApiRequest request)
+    public async Task<ApiResponse> getUserPortfolioSum([FromQuery] string Token)
     {
         ApiResponse response = new ApiResponse();
 
-        string userid = request.Token;
-        var user = await _userManager.FindByIdAsync(userid);
+        var searchedUser = await getUserIdWithToken(Token);
 
-        if (user != null && userid.Length > 0)
+        if (searchedUser == null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
+
+        if (searchedUser != null && searchedUser.Id.Length > 0)
         {
             response.Code = "200";
 
             float sum = 0;
-            var portfolios = await portfolioService.GetUserPortfolio(userid);
+            var portfolios = await portfolioService.GetUserPortfolio(searchedUser.Id);
             List<PortfolioEntry> portfolioEntries = portfolios.ToList();
 
             foreach (var portfolioEntry in portfolioEntries)
@@ -358,16 +425,32 @@ public class ApiController : ControllerBase
     // POST api/portfolio
     [HttpPost("portfolio")]
     [AllowAnonymous]
-    public async Task<ApiResponse> postUserPortfolio(PortfolioEntry port)
+    public async Task<ApiResponse> postUserPortfolio([FromQuery] string Token, PortfolioEntry port)
     {
         ApiResponse response = new ApiResponse();
 
-        var userid = port.UserId;
-        var user = await _userManager.FindByIdAsync(userid);
+        var searchedUser = await getUserIdWithToken(Token);
 
-        if (user is not null)
+        if (searchedUser == null)
         {
-            await portfolioService.PostPortfolio(port);
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
+
+        PortfolioEntry newPe = new PortfolioEntry{
+            UserId = searchedUser.Id,
+            EntryValue = port.EntryValue,
+            EntryCurrencySym = port.EntryCurrencySym
+        };
+
+        await portfolioService.PostPortfolio(newPe);
+
+        var createdPe = await portfolioService.GetPortfolio(newPe.UserId, newPe.EntryCurrencySym);
+
+
+        if (createdPe != null)
+        {
             response.Code = "200";
             response.Data.Add("message", "created");
             return response;
@@ -375,7 +458,7 @@ public class ApiController : ControllerBase
         else
         {
             response.Code = "400";
-            response.Data.Add("message", "invalid userid / not logged in");
+            response.Data.Add("message", "error creating");
             return response;
         }
     }
@@ -383,24 +466,30 @@ public class ApiController : ControllerBase
     // PUT api/portfolio
     [HttpPut("portfolio")]
     [AllowAnonymous]
-    public async Task<ApiResponse> putUserPortfolio(PortfolioEntry port)
+    public async Task<ApiResponse> putUserPortfolio(PortfolioEntry port, [FromQuery] string Token)
     {
         ApiResponse response = new ApiResponse();
+        var user = await getUserIdWithToken(Token);
+        if (user == null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
 
-        var userid = port.UserId;
-        var user = await _userManager.FindByIdAsync(userid);
+        var updatePe = portfolioService.GetPortfolio(user.Id, port.EntryCurrencySym);
 
-        if (user is not null)
+        if (updatePe is not null)
         {
             await portfolioService.PutPortfolio(port);
             response.Code = "200";
-            response.Data.Add("message", "updated");
+            response.Data.Add("message", "portfolio updated");
             return response;
         }
         else
         {
             response.Code = "400";
-            response.Data.Add("message", "invalid userid / not logged in");
+            response.Data.Add("message", "portfolio not found");
             return response;
         }
     }
@@ -408,36 +497,41 @@ public class ApiController : ControllerBase
     // DELETE api/portfolio
     [HttpDelete("portfolio")]
     [AllowAnonymous]
-    public async Task<ApiResponse> deleteUserPortfolio(PortfolioEntry port)
+    public async Task<ApiResponse> deleteUserPortfolio([FromQuery] string Token, PortfolioEntry port)
     {
         ApiResponse response = new ApiResponse();
-
-        var userid = port.UserId;
-        var user = await _userManager.FindByIdAsync(userid);
-
-        if (user is not null)
+        var user = await getUserIdWithToken(Token);
+        if (user == null)
         {
-            bool deleted = await portfolioService.DeletePortfolio(port.UserId, port.EntryCurrencySym);
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
 
-            if (deleted)
-            {
-                response.Code = "200";
-                response.Data.Add("message", "deleted");
-                return response;
-            }
-            else
-            {
-                response.Code = "400";
-                response.Data.Add("message", "fail to delete");
-                return response;
-            }
+        var pe = await portfolioService.GetPortfolio(user.Id, port.EntryCurrencySym);
+
+        if(pe is null){
+            response.Code = "400";
+            response.Data.Add("message", "portfolio entry not found");
+            return response;
+        }
+
+        bool deleted = await portfolioService.DeletePortfolio(user.Id, port.EntryCurrencySym);
+
+        if (deleted)
+        {
+            response.Code = "200";
+            response.Data.Add("message", "deleted");
+            return response;
         }
         else
         {
             response.Code = "400";
-            response.Data.Add("message", "invalid userid / not logged in");
+            response.Data.Add("message", "fail to delete");
             return response;
         }
+        
+
     }
 
     //=====================================
@@ -452,7 +546,7 @@ public class ApiController : ControllerBase
         ApiResponse response = new ApiResponse();
 
         var user = _userManager.Users.SingleOrDefault(u => u.UserName == cred.Email);
-        
+
         if (user is null)
         {
             response.Code = "404";
@@ -461,7 +555,7 @@ public class ApiController : ControllerBase
         }
 
         var result = await _signInManager.PasswordSignInAsync(cred.Email, cred.Password, false, lockoutOnFailure: true);
-                
+
         if (result.Succeeded)
         {
             var provider = MD5.Create();
@@ -476,7 +570,7 @@ public class ApiController : ControllerBase
             response.Code = "200";
             response.Data.Add("message", "Logged in");
             response.Data.Add("userid", user.Id);
-            response.Data.Add("token" , token);
+            response.Data.Add("token", token);
             return response;
         }
         if (result.RequiresTwoFactor)
@@ -490,7 +584,8 @@ public class ApiController : ControllerBase
         return response;
     }
 
-    private async Task<IdentityUser> getUserIdWithToken(string token){
+    private async Task<IdentityUser> getUserIdWithToken(string token)
+    {
         List<IdentityUser> userlist = await _userManager.Users.ToListAsync();
         foreach (var user in userlist)
         {
@@ -503,7 +598,8 @@ public class ApiController : ControllerBase
             var hashText = System.Text.Encoding.UTF8.GetBytes(computedHash);
             var userToken = System.Convert.ToBase64String(hashText);
 
-            if(userToken.Equals(token)){
+            if (userToken.Equals(token))
+            {
                 return user;
             }
         }
@@ -559,9 +655,9 @@ public class ApiController : ControllerBase
 
         var createResult = await _userManager.CreateAsync(user, cred.Password);
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        
+
         var confirmResult = await _userManager.ConfirmEmailAsync(user, token);
-        
+
         ApiResponse response = new ApiResponse();
 
         if (createResult.Succeeded && confirmResult.Succeeded)
@@ -571,12 +667,14 @@ public class ApiController : ControllerBase
             response.Data.Add("message", "Registration completed");
             return response;
         }
-        else if(!createResult.Succeeded)
+        else if (!createResult.Succeeded)
         {
             response.Code = "400";
             response.Data.Add("message", createResult.Errors.First().Description);
             return response;
-        }else{
+        }
+        else
+        {
             response.Code = "400";
             response.Data.Add("message", confirmResult.Errors.First().Description);
             return response;
@@ -592,11 +690,11 @@ public class ApiController : ControllerBase
         var from = new EmailAddress("ypan35@my.bcit.ca", "Jason Pan");
         var subject = "MoneyMaker Confirmation";
         var to = new EmailAddress(email);
-        var plainTextContent = "Confirmation link:" + token;
-        var htmlContent = "Confirmation link: <strong>" + token+ "</strong>";
+        var plainTextContent = "Confirmation token:" + token;
+        var htmlContent = "Confirmation token: <strong>" + token + "</strong>";
         var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
         var response = await client.SendEmailAsync(msg);
-        
+
     }
 
 }
