@@ -171,6 +171,41 @@ public class ApiController : ControllerBase
 
     }
 
+    // GET api/alerts/active
+    [HttpGet("alert/active")]
+    [AllowAnonymous]
+    public async Task<ApiResponse> getUserActiveAlerts([FromQuery] string Token)
+    {
+        ApiResponse response = new ApiResponse();
+
+        var searchedUser = await getUserIdWithToken(Token);
+
+        if (searchedUser == null)
+        {
+            response.Code = "400";
+            response.Data.Add("message", "Invalid token");
+            return response;
+        }
+
+        var alerts = await alertService.GetUserAlerts(searchedUser.Id);
+        List<Alert> alertList = alerts.ToList();
+        List<Alert> activeAlerts = new List<Alert>();
+
+        foreach(var a in alertList){
+            float alertCurrentVal = await apiService.GetRate(a.FromCurrency, a.ToCurrency);
+
+            if((a.isBelow && (alertCurrentVal<a.ConditionValue))
+                || (!a.isBelow && (alertCurrentVal>a.ConditionValue))){
+                activeAlerts.Add(a);
+            }
+        }
+
+        response.Code = "200";
+        response.Data.Add("alerts", activeAlerts);
+        return response;
+    }
+
+
     // POST api/alert
     [HttpPost("alert")]
     [AllowAnonymous]
