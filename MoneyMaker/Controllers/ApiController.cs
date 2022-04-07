@@ -477,11 +477,13 @@ public class ApiController : ControllerBase
             return response;
         }
 
-        var updatePe = portfolioService.GetPortfolio(user.Id, port.EntryCurrencySym);
+        var updatePe = await portfolioService.GetPortfolio(user.Id, port.EntryCurrencySym);
 
         if (updatePe is not null)
         {
-            await portfolioService.PutPortfolio(port);
+            updatePe.EntryValue = port.EntryValue;
+            await portfolioService.PutPortfolio(updatePe);
+            
             response.Code = "200";
             response.Data.Add("message", "portfolio updated");
             return response;
